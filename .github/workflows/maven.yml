@@ -29,4 +29,4 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn --file ./app/pom.xml clean install
+      run: mvn --file ./pom.xml clean install
