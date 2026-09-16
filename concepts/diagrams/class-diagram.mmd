@@ -1,0 +1,37 @@
+classDiagram
+    class Room {
+        -Integer roomId
+        -Integer maxCapacity
+        +getRoomId() Integer
+        +getMaxCapacity() Integer
+    }
+    class Person {
+        -Integer personId
+        -String name
+        +getName() String
+    }
+    class Meeting {
+        -Room room
+        -Person head
+        -List~Person~ members
+        -Date startDate
+        -Date endDate
+    }
+    class RoomDao {
+        -List~Room~ rooms
+        +getRoomById(Integer) Room
+        +addRoom(Room) void
+    }
+    class MeetingSchedulerService {
+        -RoomDao roomDao
+        -List~Meeting~ meetings
+        +createMeeting(Integer, Person, List~Person~, Date, Date) void
+        +getAllMeetings() List~Meeting~
+    }
+
+    MeetingSchedulerService --> RoomDao : uses
+    MeetingSchedulerService "1" --> "*" Meeting : creates & holds
+    Meeting "1" --> "1" Room : booked in
+    Meeting "1" --> "1" Person : head
+    Meeting "1" --> "*" Person : members
+    RoomDao "1" --> "*" Room : stores

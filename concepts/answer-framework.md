@@ -1,220 +1,194 @@
 # Low-Level Design Interview — Answer Framework (Playbook)
 
-> A step-by-step scaffold for **structuring your answer** to any LLD/OOD problem. Run it top-to-bottom in the room
-> so nothing important is missed. Mirrors the sibling `system-design` repo's
+> A simple step-by-step checklist for any LLD/OOD interview question. Follow it top to bottom so you never miss a
+> step. Mirrors the sibling `system-design` repo's
 > [`practice/answer-framework.md`](https://github.com/ShubhamChouksey123/system-design/blob/master/practice/answer-framework.md)
-> — that one is the *content checklist* for architecture rounds (estimation, data model, trade-offs); this one is
-> the equivalent for class-design rounds. The 8 steps below are the same ones tracked as a checklist in
-> [`TODO.md`](../TODO.md)'s "Answer framework" section — this doc is the expanded, worked-through version of that
-> checklist.
+> — that one is for architecture rounds; this one is for class-design rounds. Same 8 steps tracked as a checklist
+> in [`TODO.md`](../TODO.md).
 
-## At a glance — the 8 steps (and where they land in a 45-min LLD round)
+## Real interview timing: 40 minutes for the design
 
-| Phase | Time | Steps to cover here |
+A typical 60-minute LLD interview also has intro + questions at the start and end. That usually leaves about
+**40 minutes** for the actual problem. Budget it like this:
+
+| Phase | Time | Steps |
 |---|---|---|
-| 1. Clarify & identify | ~5–8 min | ① Functional requirements & scope · ② Core entities & responsibilities |
-| 2. Model | ~8–12 min | ③ Relationships & class diagram · ④ Pattern choice & justification |
-| 3. Code | ~15–20 min | ⑤ Core classes/interfaces · ⑥ Exception handling |
-| 4. Verify & extend | ~5–10 min | ⑦ Primary-flow walkthrough · ⑧ Concurrency & extensibility |
+| 1. Clarify & identify | ~5 min | ① Requirements & Scope · ② Entities & Responsibilities |
+| 2. Model | ~8 min | ③ Relationships & Class Diagram · ④ Pattern Choice |
+| 3. Code | ~20 min | ⑤ Core Classes/Interfaces · ⑥ Exception Handling |
+| 4. Verify & extend | ~7 min | ⑦ Primary-Flow Walkthrough · ⑧ Concurrency & Extensibility |
 
-> **Golden rule:** name what's explicitly *out of scope* before designing anything, and justify every pattern by
-> pointing at the specific requirement it protects against — "I used Strategy because X will change" beats "I used
-> Strategy because it's good practice," every time.
-
----
-
-## ① Functional Requirements & Scope
-
-**Goal:** pin down *what the system does* — the actors and the concrete operations they can perform. Designing
-the wrong scope is an automatic miss, same as in an HLD round.
-
-**Produce:** a short list of actors, a short list of operations, and an explicit out-of-scope list — confirmed
-with the interviewer before you name a single class.
-
-**Checklist:**
-- Who are the actors? (Usually 1–2 for an LLD problem — over-modeling actors is a sign you're scoping too wide.)
-- What are the core operations, stated as verbs? (e.g. "request an elevator," "select a destination floor," not
-  "manage the elevator system.")
-- What's explicitly **out of scope**? Naming this is half the point — an interviewer who doesn't hear it assumes
-  you forgot it, not that you considered and excluded it.
-- Is there a hidden non-functional requirement worth stating up front? (Concurrent access from multiple actors,
-  a strict ordering guarantee, an extensibility axis the prompt hints at.)
+> **Golden rule:** always say what's *out of scope* before you design anything. And for every pattern you use,
+> say **why** — "I used Strategy because X will change" is much better than "I used Strategy because it's good
+> practice."
 
 ---
 
-## ② Core Entities & Responsibilities
+## ① Requirements & Scope
 
-**Goal:** turn the nouns and verbs from ① into a first pass at classes and methods — before worrying about how
-they relate to each other.
+**Goal:** know *what* the system does before you design *how*.
 
-**Produce:** a flat list — one line per entity, one sentence per responsibility. No relationships yet, no code.
+**Do this:**
+- List the actors (usually just 1–2 for an LLD problem).
+- List the core operations as simple verbs — "request an elevator," not "manage the elevator system."
+- Say what's **out of scope**, out loud. This matters as much as saying what's in scope.
+- Ask if there's a hidden requirement — multiple users at once? A strict order to follow? Something that needs
+  to be easy to extend later?
 
-**Checklist:**
-- Nouns in the problem statement → candidate classes.
-- Verbs attached to each noun → candidate methods on that class.
-- For each entity, can you state its responsibility in one sentence *without* using "and"? If not, it's two
-  entities (this is Single Responsibility Principle, applied at design time rather than as a post-hoc label — see
-  [`concepts/design-principles.md`](design-principles.md)).
-- Is there a concept in the problem that varies (a policy, a status, a mode)? Flag it now — it's a strong signal
-  for step ④.
+**Watch out for:** too many actors. If you have 3+, you're probably scoping too wide.
+
+---
+
+## ② Entities & Responsibilities
+
+**Goal:** turn the requirements into a first list of classes — no relationships yet, no code yet.
+
+**Do this:**
+- Nouns in the problem → candidate classes.
+- Verbs attached to each noun → candidate methods.
+- For each class, say its job in **one sentence, with no "and"**. If you need "and," split it into two classes.
+- Ask: is there anything here that *varies* — a policy, a status, a mode? Flag it now. You'll need it in step ④.
+
+**Watch out for:** a class whose job needs "and" to describe. That's two responsibilities in one class.
 
 ---
 
 ## ③ Relationships & Class Diagram
 
-**Goal:** connect the entities from ② with the *right kind* of relationship, and put it on the whiteboard as an
-actual class diagram — not just a verbal description.
+**Goal:** connect the classes the right way, and draw it.
 
-**Produce:** a class diagram (see [`concepts/uml-diagrams.md`](uml-diagrams.md) §1 for notation), drawn
-nouns-first, relationships-second, member-details-last.
+**Do this:**
+- Draw the boxes (just names) first. Connect them. Fill in fields/methods last.
+- For every connection, say which kind it is:
+  - **is-a** — inheritance. Use only when one class can be swapped in wherever the other is used.
+  - **has-a** — one class owns another (a field it holds).
+  - **uses-a** — one class calls another but doesn't own it.
+- Add numbers on the lines (`1`, `0..1`, `*`) — e.g. "one `Room` can have many `Meeting`s."
+- Check: does every operation from step ① have a clear home in this diagram?
 
-**Checklist:**
-- For every pair of connected entities, name the relationship: **is-a** (inheritance/realization), **has-a**
-  (aggregation/composition), or **uses-a** (association). Getting this wrong here compounds into every later step.
-- Prefer composition over inheritance by default — only use inheritance for a genuine is-a relationship where a
-  subtype is fully substitutable for its supertype (Liskov Substitution Principle; see
-  [`concepts/basic-oop-concepts.md`](basic-oop-concepts.md) §2).
-- Mark multiplicities (`1`, `0..1`, `*`) on each relationship — this is often where a hidden requirement (can an
-  entity exist without its "owner"?) surfaces.
-- Sanity-check the diagram against ①'s operations: does every operation have a clear home among these classes?
+**Watch out for:** reaching for inheritance by default. Composition is the safer default — see
+[`concepts/basic-oop-concepts.md`](basic-oop-concepts.md) §2.
 
 ---
 
 ## ④ Pattern Choice & Justification
 
-**Goal:** identify the *varying* part of the system (flagged in ②) and isolate it behind an interface, using the
-design pattern that fits the shape of the variation — not the pattern you happen to remember best.
+**Goal:** find the part that varies (from step ②) and hide it behind an interface.
 
-**Produce:** one interface + N implementations for each varying concern, with a one-sentence justification each.
+**Quick picks:**
+- Behavior changes by **mode over time** (idle vs. moving)? → **State**
+- Caller picks a **policy** (pricing rule, dispatch rule)? → **Strategy**
+- One event needs to **notify many listeners**? → **Observer**
+- Object creation **varies by type**? → **Factory**
+- Building something with **many optional parts**? → **Builder**
 
-**Checklist:**
-- Does behavior vary by an object's **type/mode over time** (idle vs. moving, draft vs. published)? → **State**.
-- Does behavior vary by a **pluggable policy** the caller picks (pricing rule, dispatch rule)? → **Strategy**.
-- Does one event need to **notify multiple, decoupled listeners**? → **Observer**.
-- Does construction need to vary by **type** without the caller knowing the concrete class? → **Factory**.
-- Is there a **multi-step construction** with optional parts? → **Builder**.
-- For each pattern picked, say the *why* out loud: "if requirement X changes, this is one new class, not an edit
-  to an existing one" (Open/Closed Principle — see [`concepts/design-principles.md`](design-principles.md)).
-- **Resist the urge to add a pattern nothing asked for.** If there's only one implementation and no stated
-  variation axis, a plain class beats a Strategy interface with one implementation (YAGNI).
+**Do this:**
+- For each pattern you pick, say the "why" in one sentence: *"If X changes later, I add one class — I don't edit
+  this one."*
+- Don't add a pattern nothing asked for. One implementation and no variation = just use a plain class.
 
 ---
 
-## ⑤ Core Classes / Interfaces
+## ⑤ Core Classes/Interfaces
 
-**Goal:** put actual method signatures on the board — this is where the design becomes checkable.
+**Goal:** write the actual signatures. This is where your design becomes checkable.
 
-**Produce:** signatures for every class from ③/④, filled in one pass across *all* classes before fleshing out any
-single one.
-
-**Checklist:**
-- Add signatures first, across every class, before implementing any method body — this catches missing methods
-  early, before you've sunk time into one class's internals.
-- Implement only the methods the walkthrough (⑦) will actually exercise — no speculative helpers "in case they're
-  asked for."
-- Skip boilerplate getters/setters out loud ("I'd generate these") rather than typing them — that time is worth
-  more spent elsewhere.
-- Keep field visibility as tight as the design allows — if a state/strategy class in another package needs to
-  mutate something, expose an intention-revealing method (`scheduleStop(floor)`), not the raw collection (see
-  [`concepts/basic-oop-concepts.md`](basic-oop-concepts.md) §1).
+**Do this:**
+- Write method signatures for **every** class first, before filling in any single one.
+- Only implement what step ⑦'s walkthrough will actually use. No "just in case" helpers.
+- Skip getters/setters out loud ("I'd generate these") instead of typing them — save the time.
+- Don't hand out raw mutable fields/collections. If another class needs to change something, give it a named
+  method instead (e.g. `scheduleStop(floor)`, not the raw list).
 
 ---
 
 ## ⑥ Exception Handling
 
-**Goal:** name the failure modes explicitly rather than leaving them implicit — this is one of the fastest ways to
-read as senior in the room.
+**Goal:** name your failure cases out loud. This alone makes you sound senior.
 
-**Produce:** a short, spoken list mapped onto the four categories below, with at least the most important one or
-two actually implemented as a custom exception type.
+**Say these four things:**
+- **Errors** — things that can't be recovered from (e.g. "no elevators configured").
+- **Edge cases** — empty input, boundaries, things unique to this problem (e.g. asking to move to where you
+  already are — should be a no-op, not an error).
+- **Exceptions** — which exception types your code actually throws, checked or unchecked, and why.
+- **Invalid input** — what's rejected at the door, and how the caller finds out.
 
-**Checklist:**
-- **Errors** — unrecoverable/system-level failures (e.g. "no elevators configured"). Usually an unchecked
-  exception with no expectation of recovery.
-- **Edge cases** — boundary/empty/concurrent-access scenarios specific to *this* design (e.g. a request for the
-  entity's current position, which should be a no-op, not an error).
-- **Exceptions** — which checked/unchecked types the public API actually throws, and why each one is checked vs.
-  unchecked.
-- **Invalid input** — validation at the boundary: what's rejected, and how does the caller find out (exception
-  type + message, not a silently-ignored no-op unless that's the deliberate edge-case behavior above)?
+**Do this:** implement at least one real custom exception, not just a generic one.
 
 ---
 
 ## ⑦ Primary-Flow Walkthrough
 
-**Goal:** trace one end-to-end use case against the classes just written — this is where gaps in ③–⑤ get caught
-*by you*, before the interviewer catches them.
+**Goal:** trace one real flow through your classes. This is how you catch your own bugs before the interviewer
+does.
 
-**Produce:** a spoken (or sketched) sequence diagram for the single most important flow — see
-[`concepts/uml-diagrams.md`](uml-diagrams.md) §2 for notation, and
-[`src/main/java/com/shubham/app/elevatorsystem/README.md`](../src/main/java/com/shubham/app/elevatorsystem/README.md)
-§7 for a fully worked example.
+**Do this:**
+- Pick the flow that touches the *most* classes.
+- Walk it step by step: who calls what, on whom, in order.
+- Check: does every step land on a method that actually exists from step ⑤?
+- If there's a second flow worth mentioning, just describe it in words — don't draw two full diagrams.
 
-**Checklist:**
-- Pick the single flow that touches the most classes — it's the highest-value trace.
-- Walk it call-by-call: which object calls which method on which other object, in order.
-- Does every step land on a method that actually exists from ⑤? If not, that's the gap ③/④/⑤ missed.
-- If there's a second interesting flow (e.g. the reverse operation), name it verbally rather than diagramming
-  both in full — time is the scarcest resource in the room.
+**Watch out for:** skipping this step. A 30-second trace with **2+ actors** is often the only thing that catches a
+real bug — see `practice/README.md`'s Session 01 for a concrete example.
 
 ---
 
 ## ⑧ Concurrency & Extensibility
 
-**Goal:** close with the two questions a senior-level interviewer is most likely to ask if you don't volunteer
-them first.
+**Goal:** answer the two questions most interviewers ask if you don't bring them up first.
 
-**Produce:** a spoken answer for each, with at least the concurrency answer backed by something concrete in the
-code if time allows (e.g. a `synchronized` method, or a note on which method is the actual mutation boundary).
+**Concurrency — say:**
+- Can two people/threads call this at the same time?
+- If yes: what shared state could break, and how do you protect it?
+- If no: say that out loud too — don't just leave it unsaid.
 
-**Checklist:**
-- **Concurrency:** can two actors call this system at the same time? If so, name the shared mutable state and how
-  it's protected (or explicitly state it *isn't*, and why that's an acceptable scope cut for this session).
-- Call out the *specific* race that would occur without protection — "two threads calling `add()` on the same
-  unsynchronized `TreeSet` can corrupt it" is a much stronger answer than "we'd need thread safety."
-- **Extensibility:** pick one plausible new requirement (a new mode, a new policy) and state exactly what class
-  you'd add — confirm it's additive, not an edit to an existing class. This is the payoff of ④'s pattern choices,
-  made concrete.
+**Extensibility — say:**
+- Pick one plausible new requirement.
+- Name the *one class* you'd add for it.
+- Confirm it's a new class, not an edit to an old one — that's the payoff of step ④.
 
 ---
 
-## Blank template (copy into each practice attempt)
+## Blank template (copy for each practice attempt)
 
 ```
 Problem: ________________________________________________
 
-① Functional requirements & scope
+① Requirements & Scope
 - actors / operations:
-- in scope / out of scope:
+- out of scope:
 
-② Core entities & responsibilities
-- entity → one-sentence responsibility (no "and"):
+② Entities & Responsibilities
+- entity → one-sentence job (no "and"):
 
-③ Relationships & class diagram
-- is-a / has-a / uses-a per pair, multiplicities:
+③ Relationships & Class Diagram
+- is-a / has-a / uses-a per pair, with numbers (1, *, etc.):
 
-④ Pattern choice & justification
-- varying concern → pattern → "why this pattern, why now":
+④ Pattern Choice & Justification
+- what varies → which pattern → why:
 
-⑤ Core classes/interfaces
-- signatures across all classes, then fill in bodies:
+⑤ Core Classes/Interfaces
+- signatures for every class, then fill in bodies:
 
-⑥ Exception handling
+⑥ Exception Handling
 - errors · edge cases · exceptions · invalid input:
 
-⑦ Primary-flow walkthrough
-- the one flow, traced call-by-call:
+⑦ Primary-Flow Walkthrough
+- the one flow, step by step:
 
-⑧ Concurrency & extensibility
-- shared mutable state + protection (or explicit scope cut):
+⑧ Concurrency & Extensibility
+- shared state + how it's protected (or why not needed):
 - one new requirement → the one class you'd add:
 ```
 
-## One-paragraph summary
+## Quick recap
 
-Run the same eight steps every time, in order: clarify scope before naming classes, list entities before
-connecting them, connect them before picking patterns, pick patterns before writing signatures, write signatures
-before bodies, name failure modes before an interviewer asks about them, walk the primary flow to catch your own
-gaps, and close with concurrency and extensibility so the interview ends on senior-level judgment rather than
-"I ran out of time." `src/main/java/com/shubham/app/elevatorsystem/README.md` is this framework run start-to-finish
-against a real problem — read it alongside this doc the first few times through.
+- Say what's in scope and out of scope before naming a single class.
+- List entities before connecting them. Connect them before picking patterns.
+- Pick patterns before writing signatures. Write signatures before bodies.
+- Name your failure cases before the interviewer asks about them.
+- Walk the main flow yourself — that's how you catch your own gaps.
+- End on concurrency and extensibility, even briefly — it's what makes the answer feel senior.
+
+`src/main/java/com/shubham/app/elevatorsystem/README.md` runs through all 8 steps on a real problem — read it
+alongside this doc a few times until the sequence feels automatic.

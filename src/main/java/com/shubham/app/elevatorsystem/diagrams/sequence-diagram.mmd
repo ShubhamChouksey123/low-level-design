@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor Passenger
+    participant Ctrl as ElevatorController
+    participant Strat as NearestElevatorDispatchStrategy
+    participant E1 as Elevator(id=1, floor=0)
+
+    Passenger->>Ctrl: requestElevator(floor=3, UP)
+    Ctrl->>Strat: chooseElevator(elevators, 3, UP)
+    Strat-->>Ctrl: E1 (strictly nearest by floor distance)
+    Ctrl->>E1: addRequest(3)
+    E1->>E1: IdleState.addRequest → scheduleUpStop(3), setState(MovingUpState)
+
+    loop 3x step()
+        Passenger->>Ctrl: step()
+        Ctrl->>E1: step()
+        E1->>E1: MovingUpState.step → moveOneFloorUp(), serveCurrentFloorIfRequested()
+    end
+    Note over E1: currentFloor=3, upStops empty, downStops empty → setState(IdleState)
+
+    Passenger->>Ctrl: selectDestinationFloor(elevatorId=1, floor=7)
+    Ctrl->>E1: addRequest(7)
+    E1->>E1: IdleState.addRequest → scheduleUpStop(7), setState(MovingUpState)
+
+    loop 3x step()
+        Passenger->>Ctrl: step()
+        Ctrl->>E1: step()
+        E1->>E1: MovingUpState.step → moveOneFloorUp(), serveCurrentFloorIfRequested()
+    end
+    Note over E1: currentFloor=7, upStops empty, downStops empty → setState(IdleState)
+
+    loop 2x step() — arrives early, remaining calls are no-ops
+        Passenger->>Ctrl: step()
+        Ctrl->>E1: step()
+        E1->>E1: IdleState.step → (nothing to do, no pending stops)
+    end

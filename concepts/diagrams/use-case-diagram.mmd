@@ -1,0 +1,16 @@
+flowchart LR
+    Organizer([Organizer])
+    Attendee([Attendee])
+
+    subgraph System["Meeting Scheduler"]
+        UC1((Schedule Meeting))
+        UC2((Check Room Availability))
+        UC3((Cancel Meeting))
+        UC4((List My Meetings))
+    end
+
+    Organizer --- UC1
+    Organizer --- UC3
+    Organizer --- UC4
+    Attendee --- UC4
+    UC1 -.->|includes| UC2

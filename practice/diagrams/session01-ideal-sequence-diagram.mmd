@@ -1,0 +1,13 @@
+sequenceDiagram
+    actor Main
+    participant Svc as GamePlayService
+    participant P1 as Player(1)
+    participant P2 as Player(2)
+
+    loop each round
+        Main->>Svc: playTurn(P1)
+        Svc->>Svc: roll, move, apply jump, checkWinner
+        Svc-->>Main: gameOver = true (P1 reached the end)
+        Note over Main: break out of the round immediately, do NOT call playTurn(P2) this round
+    end
+    Main->>Main: announce P1 as winner

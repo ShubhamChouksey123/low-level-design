@@ -1,0 +1,36 @@
+classDiagram
+    class BoardJump {
+        <<interface>>
+        +getStart() int
+        +getEnd() int
+    }
+    class Snake
+    class Ladder
+    class Board {
+        -int length
+        -List~BoardJump~ jumps
+        +getJumpFrom(square) Optional~BoardJump~
+    }
+    class Player {
+        -int id
+        -String name
+        -int position
+    }
+    class Dice {
+        <<interface>>
+        +roll() int
+    }
+    class GamePlayService {
+        -Board board
+        -List~Player~ players
+        -Dice dice
+        +playTurn(Player) boolean
+        +isGameOver() boolean
+    }
+
+    Snake ..|> BoardJump : implements the contract of
+    Ladder ..|> BoardJump : implements the contract of
+    Board "1" --> "*" BoardJump : has-a
+    GamePlayService "1" --> "1" Board : has-a
+    GamePlayService "1" --> "*" Player : has-a
+    GamePlayService "1" --> "1" Dice : uses

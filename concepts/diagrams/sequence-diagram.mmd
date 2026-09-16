@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor Organizer
+    participant Svc as MeetingSchedulerService
+    participant Dao as RoomDao
+    participant Helper as HelperUtils
+
+    Organizer->>Svc: createMeeting(roomId, head, members, start, end)
+    loop for each existing meeting
+        Svc->>Helper: isClashing(meeting, start, end)
+        Helper-->>Svc: boolean
+    end
+    alt slot is clashing
+        Svc-->>Organizer: throw RuntimeException("room already booked")
+    else slot is free
+        Svc->>Dao: getRoomById(roomId)
+        Dao-->>Svc: Room
+        Svc->>Svc: new Meeting(room, head, members, start, end)
+        Svc-->>Organizer: void (meeting created)
+    end

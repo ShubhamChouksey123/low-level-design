@@ -23,49 +23,10 @@ edge cases) falls out of it naturally; get the relationships wrong and everythin
 **Multiplicity notation:** `1`, `0..1`, `*` (or `0..*`), `1..*` — written at each end of the line, read from the
 far end. `Room "1" —— "0..*" Meeting` reads "one Room is associated with zero-or-more Meetings."
 
-**Worked example — Meeting Scheduler (`com.shubham.app.meetingscheduler`):**
+**Worked example — Meeting Scheduler (`com.shubham.app.meetingscheduler`):** source at
+[`diagrams/class-diagram.mmd`](diagrams/class-diagram.mmd).
 
-```mermaid
-classDiagram
-    class Room {
-        -Integer roomId
-        -Integer maxCapacity
-        +getRoomId() Integer
-        +getMaxCapacity() Integer
-    }
-    class Person {
-        -Integer personId
-        -String name
-        +getName() String
-    }
-    class Meeting {
-        -Room room
-        -Person head
-        -List~Person~ members
-        -Date startDate
-        -Date endDate
-    }
-    class RoomDao {
-        -List~Room~ rooms
-        +getRoomById(Integer) Room
-        +addRoom(Room) void
-    }
-    class MeetingSchedulerService {
-        -RoomDao roomDao
-        -List~Meeting~ meetings
-        +createMeeting(Integer, Person, List~Person~, Date, Date) void
-        +getAllMeetings() List~Meeting~
-    }
-
-    MeetingSchedulerService --> RoomDao : uses
-    MeetingSchedulerService "1" --> "*" Meeting : creates & holds
-    Meeting "1" --> "1" Room : booked in
-    Meeting "1" --> "1" Person : head
-    Meeting "1" --> "*" Person : members
-    RoomDao "1" --> "*" Room : stores
-```
-
-![Class diagram for the Meeting Scheduler design](images/class-diagram.png)
+![Class diagram for the Meeting Scheduler design](diagrams/class-diagram.png)
 
 **Interview tip:** draw the *nouns* (entities) first with just their names, connect the relationships, and only
 then go back and fill in fields/methods on each box. Trying to fully spec one class before drawing the next one is
@@ -87,31 +48,10 @@ in `TODO.md`'s Answer Framework, made visual).
 | Activation bar (thin rectangle on a lifeline) | The object is actively executing during that span |
 | `alt`/`else` box | Conditional branch (e.g. success vs. failure path) |
 
-**Worked example — scheduling a meeting (`MeetingSchedulerService.createMeeting`):**
+**Worked example — scheduling a meeting (`MeetingSchedulerService.createMeeting`):** source at
+[`diagrams/sequence-diagram.mmd`](diagrams/sequence-diagram.mmd).
 
-```mermaid
-sequenceDiagram
-    actor Organizer
-    participant Svc as MeetingSchedulerService
-    participant Dao as RoomDao
-    participant Helper as HelperUtils
-
-    Organizer->>Svc: createMeeting(roomId, head, members, start, end)
-    loop for each existing meeting
-        Svc->>Helper: isClashing(meeting, start, end)
-        Helper-->>Svc: boolean
-    end
-    alt slot is clashing
-        Svc-->>Organizer: throw RuntimeException("room already booked")
-    else slot is free
-        Svc->>Dao: getRoomById(roomId)
-        Dao-->>Svc: Room
-        Svc->>Svc: new Meeting(room, head, members, start, end)
-        Svc-->>Organizer: void (meeting created)
-    end
-```
-
-![Sequence diagram for MeetingSchedulerService.createMeeting](images/sequence-diagram.png)
+![Sequence diagram for MeetingSchedulerService.createMeeting](diagrams/sequence-diagram.png)
 
 **Interview tip:** keep it to *one* flow at a time. If asked about a second flow (e.g. "what about cancelling a
 meeting?"), draw a second, separate sequence diagram rather than folding both into one — same rule the sibling
@@ -133,28 +73,9 @@ classes.
 | `<<include>>` | Dashed arrow, open head | One use case always triggers another (mandatory sub-flow) |
 | `<<extend>>` | Dashed arrow, open head | One use case optionally triggers another (conditional sub-flow) |
 
-**Worked example — Meeting Scheduler:**
+**Worked example — Meeting Scheduler:** source at [`diagrams/use-case-diagram.mmd`](diagrams/use-case-diagram.mmd).
 
-```mermaid
-flowchart LR
-    Organizer([Organizer])
-    Attendee([Attendee])
-
-    subgraph System["Meeting Scheduler"]
-        UC1((Schedule Meeting))
-        UC2((Check Room Availability))
-        UC3((Cancel Meeting))
-        UC4((List My Meetings))
-    end
-
-    Organizer --- UC1
-    Organizer --- UC3
-    Organizer --- UC4
-    Attendee --- UC4
-    UC1 -.->|includes| UC2
-```
-
-![Use case diagram for the Meeting Scheduler design](images/use-case-diagram.png)
+![Use case diagram for the Meeting Scheduler design](diagrams/use-case-diagram.png)
 
 (Mermaid has no first-class use-case diagram type, so this is drawn as a boundary-and-nodes flowchart — on an
 actual whiteboard/interview doc, use real stick-figure actors and ellipse use cases per the notation table above.)

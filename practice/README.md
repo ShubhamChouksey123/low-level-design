@@ -46,7 +46,7 @@ enough to survive more than one player.
 What was produced: 4 clear, verb-based functional requirements, and an entity list (`Game`, `User`, `Board`,
 `Snake`, `Ladder`, `GameCreationService`, `GameControllerService`).
 
-Gaps against [step ① and ②](../concepts/answer-framework.md#-functional-requirements--scope) of the framework:
+Gaps against [step ① and ②](../concepts/answer-framework.md#-requirements--scope) of the framework:
 no actors named explicitly, no out-of-scope list, and no one-sentence responsibility per entity — just a nested
 list. Writing that sentence for `GameCreationService` (which both builds the board *and* registers users) would
 likely have surfaced the SRP split on its own.
@@ -108,7 +108,21 @@ another — so the whole design should collapse to one polymorphic collection of
 hard-coded lists; the pattern choice, the duplicated-loop bug, and the extensibility story all follow from getting
 that one abstraction right.
 
-**Ideal entities & responsibilities:**
+The rest of this section follows [`concepts/answer-framework.md`](../concepts/answer-framework.md)'s 8 steps in
+order, the same structure `elevatorsystem/README.md` uses for its worked example.
+
+### ① Functional Requirements & Scope
+
+**Actors:** Player (same single actor as the original problem — no admin/spectator role).
+
+**Operations:** register players, roll a die and advance a player's position, apply a board hazard if the new
+position lands on one, decide a winner once a player reaches the last square.
+
+**Explicitly out of scope:** any UI beyond the console, persistence between runs, and changing the board once a
+game has started (no adding a snake mid-game). These weren't stated in Session 01 either — naming them here is
+itself one of the fixes.
+
+### ② Core Entities & Responsibilities
 
 | Entity | Responsibility |
 |---|---|
@@ -121,8 +135,9 @@ that one abstraction right.
 | `GamePlayService` | Owns the turn loop: roll → move → apply jump → check winner → report game-over. The *only* place that decides whether the game continues. |
 | `InvalidBoardConfigurationException` | Thrown at board-construction time for invalid jump placement. |
 
-**Relationships** (named per [`concepts/uml-diagrams.md`](../concepts/uml-diagrams.md#1-class-diagram)'s four
-categories):
+### ③ Relationships & Class Diagram
+
+Named per [`concepts/uml-diagrams.md`](../concepts/uml-diagrams.md#1-class-diagram)'s four categories:
 
 - **Implements the contract of** — `Snake` and `Ladder` implement the contract of `BoardJump` (realization,
   dashed arrow). This is the relationship the whole design pivots on: it's what collapses the two duplicated
@@ -143,18 +158,58 @@ categories):
 
 ![Ideal class diagram for Snake and Ladder, showing the BoardJump interface implemented by Snake and Ladder, owned by Board, alongside Player and Dice used by GamePlayService](diagrams/session01-ideal-class-diagram.png)
 
-**Pattern choice & justification:** `BoardJump` collapses the two duplicated loops from this session into one —
-adding a third hazard type (a "wormhole," say) is a new class, not a new loop (Open/Closed). `Dice` as an
-interface is a small Strategy seam purely for testability — a `FixedDice` implementation makes the turn loop
-deterministic in a unit test, the same way a real production system would want a swappable dice/RNG source.
+### ④ Pattern Choice & Justification
 
-**Exception handling:** `Board`'s constructor validates every `BoardJump` — start/end within bounds, start ≠ end,
+**Pattern used: Strategy Pattern — used twice.**
+
+Put a behavior behind an interface, so the calling code can swap implementations without changing itself.
+
+- **Board hazards:** `Board` only knows the `BoardJump` interface. `Snake` and `Ladder` are its two strategies —
+  `Board` calls `getStart()`/`getEnd()` without caring which one it has. A new hazard type is one new class.
+- **Dice rolls:** `GamePlayService` only knows the `Dice` interface. `RandomDice` is the real strategy;
+  `FixedDice` is a second strategy used only in tests, so a test can fix the roll sequence instead of getting a
+  random one.
+
+### ⑤ Core Classes/Interfaces
+
+Signatures only — getters and full implementations are in
+[`src/main/java/com/shubham/app/snakeladder2/ideal/`](../src/main/java/com/shubham/app/snakeladder2/ideal):
+
+```java
+interface BoardJump { int getStart(); int getEnd(); }
+class Snake implements BoardJump { Snake(int start, int end); }   // requires start > end
+class Ladder implements BoardJump { Ladder(int start, int end); } // requires start < end
+
+class Board {
+    Board(int length, List<BoardJump> jumps);   // validates bounds + duplicate jump-start squares
+    Optional<BoardJump> getJumpFrom(int square);
+}
+
+class Player {
+    Player(int id, String name);
+    void moveTo(int newPosition);
+}
+
+interface Dice { int roll(); }
+
+class GamePlayService {
+    GamePlayService(Board board, List<Player> players, Dice dice);
+    boolean playTurn(Player player);   // returns true once this call ends the game
+    boolean isGameOver();
+}
+```
+
+### ⑥ Exception Handling
+
+`Board`'s constructor validates every `BoardJump` — start/end within bounds, start ≠ end,
 no two jumps starting on the same square — and throws `InvalidBoardConfigurationException` on the first violation,
 naming which jump and why. `GamePlayService.playTurn` returns `false` once the game is already over instead of
 throwing, so the caller decides what to do with a finished game rather than catching an exception for a routine
 condition.
 
-**Primary-flow walkthrough — the actual fix for this session's bug:** source at
+### ⑦ Primary-Flow Walkthrough — the actual fix for this session's bug
+
+Source at
 [`diagrams/session01-ideal-sequence-diagram.mmd`](diagrams/session01-ideal-sequence-diagram.mmd).
 
 ![Sequence diagram showing Main calling playTurn for Player 1, who wins immediately, and breaking out of the round before Player 2 gets a turn](diagrams/session01-ideal-sequence-diagram.png)
@@ -163,7 +218,9 @@ The fix is entirely in the caller's loop shape: check the boolean `playTurn` ret
 player's turn**, and `break` out of the round the moment it's `true` — not just between whole rounds. That one
 change removes the crash this session's design would hit with 2+ players.
 
-**Concurrency & extensibility:** single-threaded console game — concurrency is explicitly out of scope, stated
+### ⑧ Concurrency & Extensibility
+
+Single-threaded console game — concurrency is explicitly out of scope, stated
 rather than left silent. Extensibility: a new hazard type is one new `BoardJump` implementation; a new dice shape
 (a d20, a "roll twice, take higher" house rule) is one new `Dice` implementation. Neither touches
 `GamePlayService`.

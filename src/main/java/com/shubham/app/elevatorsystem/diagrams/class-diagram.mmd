@@ -1,0 +1,33 @@
+classDiagram
+    class ElevatorController {
+        -List~Elevator~ elevators
+        -DispatchStrategy dispatchStrategy
+        +requestElevator(floor, Direction) void
+        +selectDestinationFloor(elevatorId, floor) void
+        +step() void
+    }
+    class Elevator {
+        -int currentFloor
+        -ElevatorState state
+        -TreeSet~Integer~ upStops
+        -TreeSet~Integer~ downStops
+        +addRequest(floor) void
+        +step() void
+    }
+    class ElevatorState {
+        <<interface>>
+        +addRequest(Elevator, floor) void
+        +step(Elevator) void
+    }
+    class DispatchStrategy {
+        <<interface>>
+        +chooseElevator(elevators, floor, Direction) Elevator
+    }
+
+    ElevatorController "1" --> "*" Elevator : owns
+    ElevatorController "1" --> "1" DispatchStrategy : uses
+    Elevator "1" --> "1" ElevatorState : delegates to
+    IdleState ..|> ElevatorState
+    MovingUpState ..|> ElevatorState
+    MovingDownState ..|> ElevatorState
+    NearestElevatorDispatchStrategy ..|> DispatchStrategy
