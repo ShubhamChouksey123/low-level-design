@@ -172,8 +172,11 @@ Put a behavior behind an interface, so the calling code can swap implementations
 
 ### ⑤ Core Classes/Interfaces
 
-Signatures only — getters and full implementations are in
-[`src/main/java/com/shubham/app/snakeladder2/ideal/`](../src/main/java/com/shubham/app/snakeladder2/ideal):
+Signatures only — full implementations are in
+[`src/main/java/com/shubham/app/snakeladder2/ideal/`](../src/main/java/com/shubham/app/snakeladder2/ideal), and
+tests proving each class's behavior are in
+[`src/test/java/com/shubham/app/snakeladder2/ideal/`](../src/test/java/com/shubham/app/snakeladder2/ideal)
+(`BoardTest`, `SnakeTest`, `LadderTest`, `PlayerRegistrationServiceTest`, `GamePlayServiceTest`):
 
 ```java
 interface BoardJump { int getStart(); int getEnd(); }
