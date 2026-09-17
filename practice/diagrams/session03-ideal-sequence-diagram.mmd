@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor Main
+    participant Svc as MeetingSchedulingService
+    participant Board as MeetingRoomBoard
+    participant Strat as FirstAvailableRoomAllocationStrategy
+
+    Main->>Svc: bookMeeting(12:00, 13:59, user)
+    Svc->>Board: book(id=0, slot, userId)
+    Board->>Strat: chooseRoom(rooms, meetings=[], slot)
+    Strat-->>Board: Room(0)
+    Board-->>Svc: Meeting(id=0, Room 0)
+    Svc-->>Main: Meeting(id=0)
+
+    Main->>Svc: bookMeeting(11:30, 14:15, user), wraps meeting 0
+    Svc->>Board: book(id=1, wrappingSlot, userId)
+    Board->>Strat: chooseRoom(rooms, meetings=[Meeting 0], wrappingSlot)
+    Note over Strat: Meeting 0's slot overlaps the wrapping slot on both ends
+    Strat-->>Board: Optional.empty()
+    Board-->>Svc: throws NoRoomAvailableException
+    Svc-->>Main: NoRoomAvailableException
+
+    Main->>Svc: cancelMeeting(0)
+    Svc->>Board: cancel(0)
+    Board-->>Svc: removed
+
+    Main->>Svc: bookMeeting(11:30, 14:15, user), retried
+    Svc->>Board: book(id=2, wrappingSlot, userId)
+    Board->>Strat: chooseRoom(rooms, meetings=[], wrappingSlot)
+    Strat-->>Board: Room(0), now free
+    Board-->>Svc: Meeting(id=2, Room 0)
+    Svc-->>Main: Meeting(id=2)

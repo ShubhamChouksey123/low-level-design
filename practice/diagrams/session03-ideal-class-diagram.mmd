@@ -1,0 +1,45 @@
+classDiagram
+    class RoomAllocationStrategy {
+        <<interface>>
+        +chooseRoom(List~Room~, List~Meeting~, TimeSlot) Optional~Room~
+    }
+    class FirstAvailableRoomAllocationStrategy
+    class Room {
+        -int id
+    }
+    class TimeSlot {
+        -Instant start
+        -Instant end
+        +overlaps(TimeSlot) boolean
+    }
+    class Meeting {
+        -int id
+        -TimeSlot timeSlot
+        -Room room
+        -int bookedByUserId
+    }
+    class MeetingRoomBoard {
+        -List~Room~ rooms
+        -List~Meeting~ meetings
+        -RoomAllocationStrategy allocationStrategy
+        +book(int, TimeSlot, int) Meeting
+        +cancel(int)
+    }
+    class MeetingSchedulingService {
+        -MeetingRoomBoard board
+        +bookMeeting(Instant, Instant, User) Meeting
+        +cancelMeeting(int)
+    }
+    class User {
+        -int id
+        -String name
+    }
+
+    FirstAvailableRoomAllocationStrategy ..|> RoomAllocationStrategy : implements the contract of
+    MeetingRoomBoard "1" --> "*" Room : has-a
+    MeetingRoomBoard "1" --> "*" Meeting : has-a
+    MeetingRoomBoard "1" --> "1" RoomAllocationStrategy : uses
+    Meeting "1" --> "1" Room : has-a
+    Meeting "1" --> "1" TimeSlot : has-a
+    MeetingSchedulingService "1" --> "1" MeetingRoomBoard : has-a
+    MeetingSchedulingService "1" --> "1" User : uses
