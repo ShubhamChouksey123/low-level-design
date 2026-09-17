@@ -129,7 +129,8 @@ does.
 - If there's a second flow worth mentioning, just describe it in words — don't draw two full diagrams.
 
 **Watch out for:** skipping this step. A 30-second trace with **2+ actors** is often the only thing that catches a
-real bug — see `practice/README.md`'s Session 01 for a concrete example.
+real bug — see [`practice/session-01-snake-and-ladder.md`](../practice/session-01-snake-and-ladder.md) for a
+concrete example.
 
 ---
 

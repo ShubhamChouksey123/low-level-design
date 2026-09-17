@@ -1,0 +1,26 @@
+sequenceDiagram
+    actor Main
+    participant Svc as ParkingService
+    participant Lot as ParkingLot
+    participant T1 as Ticket(first)
+    participant T2 as Ticket(second)
+
+    Main->>Svc: issueTicket(vehicle A)
+    Svc->>Lot: claimVacantSpot()
+    Lot-->>Svc: Spot(0)
+    Svc-->>Main: T1 = Ticket(spot 0)
+
+    Main->>Svc: vacateSpot(T1.id)
+    Svc->>T1: close()
+    Svc->>Lot: releaseSpot(Spot 0)
+
+    Main->>Svc: issueTicket(vehicle B)
+    Svc->>Lot: claimVacantSpot()
+    Lot-->>Svc: Spot(0), reused
+    Svc-->>Main: T2 = Ticket(spot 0)
+
+    Main->>Svc: vacateSpot(T1.id), replaying the stale ticket
+    Svc->>T1: close(), already closed
+    T1-->>Svc: throws InvalidTicketException
+    Note over Svc,Lot: Spot(0) stays OCCUPIED — vehicle B is not disturbed
+    Svc-->>Main: InvalidTicketException

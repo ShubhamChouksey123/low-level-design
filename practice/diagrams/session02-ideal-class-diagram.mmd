@@ -1,0 +1,37 @@
+classDiagram
+    class SpotAllocationStrategy {
+        <<interface>>
+        +chooseSpot(List~Spot~) Optional~Spot~
+    }
+    class FirstAvailableSpotAllocationStrategy
+    class Spot {
+        -int id
+        -SpotStatus status
+        +isVacant() boolean
+    }
+    class ParkingLot {
+        -List~Spot~ spots
+        -SpotAllocationStrategy allocationStrategy
+        +claimVacantSpot() Spot
+        +releaseSpot(Spot)
+    }
+    class Ticket {
+        -int id
+        -String vehicleNumber
+        -Spot spot
+        -boolean closed
+        +close()
+    }
+    class ParkingService {
+        -ParkingLot parkingLot
+        -Map~int,Ticket~ tickets
+        +issueTicket(String) Ticket
+        +vacateSpot(int)
+    }
+
+    FirstAvailableSpotAllocationStrategy ..|> SpotAllocationStrategy : implements the contract of
+    ParkingLot "1" --> "*" Spot : has-a
+    ParkingLot "1" --> "1" SpotAllocationStrategy : uses
+    Ticket "1" --> "1" Spot : has-a
+    ParkingService "1" --> "1" ParkingLot : has-a
+    ParkingService "1" --> "*" Ticket : has-a

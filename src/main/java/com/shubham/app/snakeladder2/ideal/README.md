@@ -1,8 +1,8 @@
 # Snake and Ladder — Ideal Design (implemented)
 
 This package is the working implementation of the **"The ideal design"** section in
-[`practice/README.md`](../../../../../../../../practice/README.md) — the reference answer written after
-reviewing [`../practice`](../practice)'s mock-interview attempt against
+[`practice/session-01-snake-and-ladder.md`](../../../../../../../../practice/session-01-snake-and-ladder.md) — the
+reference answer written after reviewing [`../practice`](../practice)'s mock-interview attempt against
 [`concepts/answer-framework.md`](../../../../../../../../concepts/answer-framework.md).
 
 ## What changed vs. the doc (and why)
