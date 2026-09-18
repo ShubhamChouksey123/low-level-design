@@ -1,0 +1,29 @@
+classDiagram
+    class ConnectionAssigningStrategy {
+        <<interface>>
+        +chooseConnection(List~Connection~) Optional~Connection~
+    }
+    class FirstIdleConnectionAssigningStrategy
+    class Connection {
+        -int id
+        -State state
+        +isIdle() boolean
+    }
+    class State {
+        <<enumeration>>
+        IDLE
+        OCCUPIED
+    }
+    class ConnectionPool {
+        -List~Connection~ connections
+        -ConnectionAssigningStrategy assigningStrategy
+        -Map~int,Connection~ requestIdToConnection
+        -Deque~int~ waitingRequestIds
+        +acquireConnection(int) Optional~int~
+        +releaseConnection(int)
+    }
+
+    FirstIdleConnectionAssigningStrategy ..|> ConnectionAssigningStrategy : implements the contract of
+    ConnectionPool "1" --> "*" Connection : has-a
+    ConnectionPool "1" --> "1" ConnectionAssigningStrategy : uses
+    Connection "1" --> "1" State : has-a

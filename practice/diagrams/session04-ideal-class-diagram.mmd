@@ -1,0 +1,52 @@
+classDiagram
+    class TradePricingStrategy {
+        <<interface>>
+        +priceOf(Order, Order) double
+    }
+    class RestingOrderPriceStrategy
+    class Side {
+        <<enumeration>>
+        BUY
+        SELL
+    }
+    class Order {
+        -int id
+        -int userId
+        -int stockId
+        -Side side
+        -double price
+        -int remainingQuantity
+        +fill(int)
+        +isFullyFilled() boolean
+    }
+    class Trade {
+        -int id
+        -int stockId
+        -double price
+        -int units
+        -int buyOrderId
+        -int sellOrderId
+        -int buyerId
+        -int sellerId
+    }
+    class OrderBook {
+        -NavigableMap~Double,Deque~Order~~ asks
+        -NavigableMap~Double,Deque~Order~~ bids
+        -TradePricingStrategy pricingStrategy
+        +submit(Order) List~Trade~
+    }
+    class MatchingEngine {
+        -Map~int,OrderBook~ orderBooksByStockId
+        +registerStock(Stock, TradePricingStrategy)
+        +submitOrder(Order) List~Trade~
+    }
+    class Stock {
+        -int id
+    }
+
+    RestingOrderPriceStrategy ..|> TradePricingStrategy : implements the contract of
+    OrderBook "1" --> "*" Order : has-a
+    OrderBook "1" --> "1" TradePricingStrategy : uses
+    OrderBook "1" --> "*" Trade : has-a
+    MatchingEngine "1" --> "*" OrderBook : has-a
+    Order "1" --> "1" Side : has-a

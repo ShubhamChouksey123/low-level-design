@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor Main
+    participant Engine as MatchingEngine
+    participant Book as OrderBook
+    participant Strat as RestingOrderPriceStrategy
+
+    Main->>Engine: submitOrder(SELL, price=100, qty=10)
+    Engine->>Book: submit(order)
+    Note over Book: asks empty, rests at price 100
+    Book-->>Engine: []
+
+    Main->>Engine: submitOrder(SELL, price=101, qty=5)
+    Engine->>Book: submit(order)
+    Note over Book: rests at price 101
+    Book-->>Engine: []
+
+    Main->>Engine: submitOrder(BUY, price=101, qty=12)
+    Engine->>Book: submit(order)
+    Note over Book: best ask = 100, crosses (100 <= 101)
+    Book->>Strat: priceOf(incoming, resting@100)
+    Strat-->>Book: 100
+    Note over Book: fills 10 units, resting@100 fully filled and removed
+    Note over Book: best ask now = 101, crosses (101 <= 101)
+    Book->>Strat: priceOf(incoming, resting@101)
+    Strat-->>Book: 101
+    Note over Book: fills remaining 2 units, incoming fully filled, resting@101 has 3 left
+    Book-->>Engine: [Trade(100,10), Trade(101,2)]
+    Engine-->>Main: [Trade(100,10), Trade(101,2)]

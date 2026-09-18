@@ -1,0 +1,30 @@
+sequenceDiagram
+    actor Main
+    participant Pool as ConnectionPool
+    participant Strat as FirstIdleConnectionAssigningStrategy
+
+    Main->>Pool: acquireConnection(1)
+    Pool->>Strat: chooseConnection(connections)
+    Strat-->>Pool: Connection(1)
+    Pool-->>Main: Optional[1]
+
+    Main->>Pool: acquireConnection(2)
+    Pool->>Strat: chooseConnection(connections)
+    Strat-->>Pool: Connection(2)
+    Pool-->>Main: Optional[2]
+
+    Main->>Pool: acquireConnection(3), pool full
+    Pool->>Strat: chooseConnection(connections)
+    Strat-->>Pool: Optional.empty()
+    Note over Pool: request 3 queued
+    Pool-->>Main: Optional.empty()
+
+    Main->>Pool: releaseConnection(1)
+    Pool->>Pool: free connection 1, queue has request 3
+    Pool->>Strat: chooseConnection(connections)
+    Strat-->>Pool: Connection(1)
+    Note over Pool: request 3 now holds connection 1
+
+    Main->>Pool: releaseConnection(2)
+    Pool->>Pool: free connection 2, queue is empty
+    Note over Pool: nothing to hand connection 2 to — stays idle, no crash
