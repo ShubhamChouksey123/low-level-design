@@ -57,4 +57,15 @@ public class ConnectionPool {
             acquireConnection(nextRequestId);
         }
     }
+
+    // Only a request that is actually sitting in the wait queue can be expired — a
+    // request
+    // that already holds a connection isn't queued, so it isn't this method's
+    // concern.
+    public synchronized void expireRequest(int requestId) {
+        boolean removed = waitingRequestIds.remove(Integer.valueOf(requestId));
+        if (!removed) {
+            throw new InvalidRequestIdException("no queued request: " + requestId);
+        }
+    }
 }

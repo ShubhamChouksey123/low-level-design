@@ -79,6 +79,49 @@ class ConnectionPoolTest {
     }
 
     @Test
+    void expiringAQueuedRequestSkipsItWhenAConnectionIsLaterReleased() {
+        ConnectionPool pool = newPool(1);
+        pool.acquireConnection(1);
+        pool.acquireConnection(2);
+
+        pool.expireRequest(2);
+        pool.releaseConnection(1);
+
+        // Request 2 was expired, so the connection freed by releaseConnection(1) above
+        // must
+        // still be sitting idle for the next fresh acquirer, not already handed to
+        // request 2.
+        Optional<Integer> connectionId = pool.acquireConnection(3);
+        assertEquals(1, connectionId.orElseThrow());
+    }
+
+    @Test
+    void expiringARequestThatWasNeverQueuedThrows() {
+        ConnectionPool pool = newPool(1);
+
+        assertThrows(InvalidRequestIdException.class, () -> pool.expireRequest(999));
+    }
+
+    @Test
+    void expiringARequestThatAlreadyHoldsAConnectionThrows() {
+        ConnectionPool pool = newPool(1);
+        pool.acquireConnection(1);
+
+        assertThrows(InvalidRequestIdException.class, () -> pool.expireRequest(1));
+    }
+
+    @Test
+    void expiringTheSameRequestTwiceThrowsOnTheSecondCall() {
+        ConnectionPool pool = newPool(1);
+        pool.acquireConnection(1);
+        pool.acquireConnection(2);
+
+        pool.expireRequest(2);
+
+        assertThrows(InvalidRequestIdException.class, () -> pool.expireRequest(2));
+    }
+
+    @Test
     void concurrentAcquiresNeverDoubleAssignTheSameConnection() throws InterruptedException {
         int poolSize = 20;
         ConnectionPool pool = newPool(poolSize);

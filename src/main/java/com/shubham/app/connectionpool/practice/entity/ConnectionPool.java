@@ -57,7 +57,7 @@ public class ConnectionPool {
         connection.free();
         requestIdToAcquiredConnection.remove(requestId);
 
-        if(!requestQueue.isEmpty()){
+        if (!requestQueue.isEmpty()) {
             int waitingRequestId = requestQueue.pollFirst();
             acquireConnection(waitingRequestId);
         }
