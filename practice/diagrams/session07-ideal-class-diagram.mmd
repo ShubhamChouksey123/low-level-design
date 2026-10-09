@@ -1,0 +1,41 @@
+classDiagram
+    class RateLimitingAlgorithm {
+        <<interface>>
+        +allowRequest(Instant) boolean
+    }
+    class RateLimitingAlgorithmFactory {
+        <<interface>>
+        +create() RateLimitingAlgorithm
+    }
+    class FixedWindowRateLimitingAlgorithm {
+        -int maxRequestsPerWindow
+        -Duration windowSize
+        -Deque~Instant~ windowRequests
+    }
+    class SlidingWindowRateLimitingAlgorithm {
+        -int maxRequestsPerWindow
+        -Duration windowSize
+        -Deque~Instant~ windowRequests
+    }
+    class FixedWindowRateLimitingAlgorithmFactory {
+        -int maxRequestsPerWindow
+        -Duration windowSize
+    }
+    class SlidingWindowRateLimitingAlgorithmFactory {
+        -int maxRequestsPerWindow
+        -Duration windowSize
+    }
+    class RateLimiter {
+        -RateLimitingAlgorithmFactory algorithmFactory
+        -Map~String,RateLimitingAlgorithm~ clientIdToAlgorithm
+        +allowRequest(String, Instant) boolean
+    }
+
+    FixedWindowRateLimitingAlgorithm ..|> RateLimitingAlgorithm : implements the contract of
+    SlidingWindowRateLimitingAlgorithm ..|> RateLimitingAlgorithm : implements the contract of
+    FixedWindowRateLimitingAlgorithmFactory ..|> RateLimitingAlgorithmFactory : implements the contract of
+    SlidingWindowRateLimitingAlgorithmFactory ..|> RateLimitingAlgorithmFactory : implements the contract of
+    FixedWindowRateLimitingAlgorithmFactory --> FixedWindowRateLimitingAlgorithm : uses
+    SlidingWindowRateLimitingAlgorithmFactory --> SlidingWindowRateLimitingAlgorithm : uses
+    RateLimiter "1" --> "1" RateLimitingAlgorithmFactory : uses
+    RateLimiter "1" --> "*" RateLimitingAlgorithm : has-a

@@ -95,7 +95,7 @@ Roughly ordered by how frequently they show up in SMTS-level LLD rounds:
 
 - [ ] Parking Lot (multi-level, multiple vehicle/spot types, pricing strategy)
 - [ ] LRU Cache / LFU Cache (from scratch, then compare to `java.util.LinkedHashMap` based impl)
-- [ ] Rate Limiter (token bucket, sliding window — pluggable strategy)
+- [ ] **Rate Limiter (token bucket, sliding window — pluggable strategy)** — in progress now; LLD/class-design half of the problem (pluggable algorithm via Strategy, thread-safety). The scaling/distributed half is tracked separately in the sibling `system-design` repo: [`docs/company-specific/atlassian/rate-limiter.md`](https://github.com/ShubhamChouksey123/system-design/blob/master/docs/company-specific/atlassian/rate-limiter.md).
 - [ ] ATM / Vending Machine (State pattern)
 - [ ] Splitwise / Expense Sharing (settlement algorithm, group balances)
 - [ ] Ride Sharing (Uber/Lyft-style: driver-rider matching, pricing strategy)

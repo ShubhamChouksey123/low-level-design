@@ -1,0 +1,35 @@
+sequenceDiagram
+    actor Main
+    participant FW as Fixed Window RateLimiter
+    participant SW as Sliding Window RateLimiter
+
+    Main->>FW: allowRequest user1 at t equals 0.0s
+    FW-->>Main: true, opens the window
+
+    Main->>FW: allowRequest user1 at t equals 9.8s
+    FW-->>Main: true
+    Main->>FW: allowRequest user1 at t equals 9.9s
+    FW-->>Main: true
+
+    Main->>FW: allowRequest user1 at t equals 10.0s
+    Note over FW: elapsed since window start is 10s, the whole window resets to zero
+    FW-->>Main: true
+
+    Main->>FW: allowRequest user1 at t equals 10.05s
+    Note over FW: incorrect, five requests now sit inside the trailing 10s span
+    FW-->>Main: true
+
+    Main->>SW: allowRequest user1 at t equals 0.0s
+    SW-->>Main: true
+    Main->>SW: allowRequest user1 at t equals 9.8s
+    SW-->>Main: true
+    Main->>SW: allowRequest user1 at t equals 9.9s
+    SW-->>Main: true
+
+    Main->>SW: allowRequest user1 at t equals 10.0s
+    Note over SW: the t equals 0.0s entry ages out alone, there is no wholesale reset
+    SW-->>Main: true
+
+    Main->>SW: allowRequest user1 at t equals 10.05s
+    Note over SW: three entries are still inside the trailing 10s window
+    SW-->>Main: false, correctly rejected
