@@ -21,12 +21,12 @@ public class ResultService {
     public List<String> getResults(List<Ballot> ballots) {
         Map<String, CandidateTally> voteCount = new HashMap<>();
 
-        for (int ballotIndex = 0 ; ballotIndex < ballots.size() ; ballotIndex++) {
+        for (int ballotIndex = 0; ballotIndex < ballots.size(); ballotIndex++) {
             Ballot ballot = ballots.get(ballotIndex);
-            for(int i = 0 ; i < ballot.getRankedCandidates().size() ; i++){
+            for (int i = 0; i < ballot.getRankedCandidates().size(); i++) {
                 String name = ballot.getRankedCandidates().get(i);
                 CandidateTally tally = voteCount.get(name);
-                if(tally == null){
+                if (tally == null) {
                     tally = new CandidateTally(name);
                     voteCount.put(name, tally);
                 }
@@ -37,14 +37,14 @@ public class ResultService {
         List<CandidateTally> teams = new ArrayList<>(voteCount.values());
 
         Collections.sort(teams, (a, b) -> {
-            if(a.getScore() != b.getScore()){
+            if (a.getScore() != b.getScore()) {
                 return Integer.compare(b.getScore(), a.getScore());
             }
             return tieBreakerStrategy.sortLogic(a, b);
         });
 
         List<String> ans = new ArrayList<>();
-        for(CandidateTally candidateTally : teams){
+        for (CandidateTally candidateTally : teams) {
             ans.add(candidateTally.getName());
         }
         return ans;

@@ -20,7 +20,6 @@ public class Main {
         ResultService resultService = new ResultService(new RankPositionTieBreakStrategy());
         System.out.println("resultService : " + resultService.getResults(ballots));
 
-
         ResultService resultService2 = new ResultService(new EarliestToReachTieBreakStrategy());
         System.out.println("resultService2 : " + resultService2.getResults(ballots));
     }

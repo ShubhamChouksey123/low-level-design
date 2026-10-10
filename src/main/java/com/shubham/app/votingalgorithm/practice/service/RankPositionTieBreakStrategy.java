@@ -9,8 +9,8 @@ public class RankPositionTieBreakStrategy implements TieBreakerStrategy {
 
     @Override
     public int sortLogic(CandidateTally a, CandidateTally b) {
-        for(int i = 0 ; i < BALLOT_LIST_SIZE ; i++){
-            if(a.getPositionCounts()[i] != b.getPositionCounts()[i]){
+        for (int i = 0; i < BALLOT_LIST_SIZE; i++) {
+            if (a.getPositionCounts()[i] != b.getPositionCounts()[i]) {
                 return Integer.compare(b.getPositionCounts()[i], a.getPositionCounts()[i]);
             }
         }

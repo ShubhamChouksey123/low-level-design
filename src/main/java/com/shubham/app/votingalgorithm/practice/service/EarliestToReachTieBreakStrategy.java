@@ -6,7 +6,7 @@ import com.shubham.app.votingalgorithm.practice.entity.TieBreakerStrategy;
 public class EarliestToReachTieBreakStrategy implements TieBreakerStrategy {
 
     @Override
-    public int sortLogic(CandidateTally a, CandidateTally b){
+    public int sortLogic(CandidateTally a, CandidateTally b) {
         return Integer.compare(a.getLastBallotIndex(), b.getLastBallotIndex());
     }
 }

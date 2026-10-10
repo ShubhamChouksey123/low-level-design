@@ -9,13 +9,12 @@ public class CandidateTally {
     private int lastBallotIndex;
     private int score;
 
-    public void addVote(int rank, int index){
+    public void addVote(int rank, int index) {
         int point = BALLOT_LIST_SIZE - rank;
         score += (point);
         lastBallotIndex = index;
         positionCounts[rank]++;
     }
-
 
     public CandidateTally(String name) {
         this.name = name;
