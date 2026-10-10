@@ -24,6 +24,7 @@ Sessions table plus the two tracker sections that aggregate *across* every sessi
 | 07 | [Rate Limiter](session-07-rate-limiter.md) | 4/10 | 1/10 | 3/10 | 3/10 | 3/10 | **2.8/10** | ❌ Needs work |
 | 08 | [Subscription / Billing Service](session-08-subscription-billing.md) | 3/10 | 1/10 | 1/10 | 2/10 | 2/10 | **1.8/10** | ❌ Needs work |
 | 09 | [Voting Algorithm](session-09-voting-algorithm.md) | 3/10 | 1/10 | 4/10 | 1/10 | 2/10 | **2.2/10** | ❌ Needs work |
+| 10 | [Design Snake Game](session-10-snake-game.md) | 4/10 | 1/10 | 1/10 | 2/10 | 2/10 | **2.0/10** | ❌ Needs work |
 
 Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borderline 5.5–6.9 · ❌ Needs work < 5.5.
 
@@ -31,39 +32,42 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
 
 ## Consolidated Tips (grouped by axis, weakest first)
 
-- **Correctness (Walkthrough)** `[S01][S02][S03][S04][S05][S06][S07][S08][S09]` — Trace the primary flow with
-  ≥2 actors, ≥2 uses of the same handle, every relative ordering of a range/interval check, both directions of
-  a two-sided structure, the case where a demo's last action happens with nothing left waiting for it, every
-  stage/branch named in the problem statement, when the problem statement itself scopes the API check the
-  method signature actually matches that sentence, *and* — Session 09's finding — a size constraint phrased as
-  "up to N" ("up to three different candidates") means smaller inputs are valid, not just a cap to defend
-  against; Session 09's ballot loop crashed on exactly the shorter-ballot input the phrase was there to allow.
-  Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10.
-- **Implementation & Exceptions** `[S01][S02][S03][S04][S05][S06][S07][S08][S09]` — Default to no setter
+- **Correctness (Walkthrough)** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10]` — Trace the primary flow
+  with ≥2 actors, ≥2 uses of the same handle, every relative ordering of a range/interval check, both
+  directions of a two-sided structure, the case where a demo's last action happens with nothing left waiting
+  for it, every stage/branch named in the problem statement, when the problem statement itself scopes the API
+  check the method signature actually matches that sentence, a size constraint phrased as "up to N" means
+  smaller inputs are valid, *and* — Session 10's finding — a state machine's "losing" branch needs a
+  follow-up call tried against it too, not just the branch itself; Session 10's demo never called `move`
+  again after a `-1`, which hid a second real bug (the game silently resuming) on top of the first (the
+  tail-reversal collision). Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10, 2/10.
+- **Implementation & Exceptions** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10]` — Default to no setter
   unless something outside the constructor genuinely needs to mutate that field, validate every invariant
   where the mutation actually happens, a config value that varies by context shouldn't be stored as a field on
-  an unrelated entity, *and* — Session 09's finding, a new low for this axis — a `static` field assigned
-  inside a non-static constructor turns per-instance configuration into shared global state; constructing a
-  second `ResultService` silently rewired an existing, untouched instance's behavior. Score history: 5/10,
-  5/10, 4/10, 1/10, 6/10, 4/10, 3/10, 2/10, 1/10.
-- **Class Diagram & Relationships** `[S01][S02][S03][S04][S05][S06][S07][S08][S09]` — Every service class
+  an unrelated entity, a `static` field assigned inside a non-static constructor turns per-instance
+  configuration into shared global state, *and* — Session 10's finding — a boolean/collision check that
+  depends on what else happens *this same step* (here: whether the tail is about to vacate) has to be computed
+  in dependency order, not have the dependent fact baked in as already decided. Score history: 5/10, 5/10,
+  4/10, 1/10, 6/10, 4/10, 3/10, 2/10, 1/10, 2/10.
+- **Class Diagram & Relationships** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10]` — Every service class
   must have at least one relationship line to the entities it operates on, each label must match the field
   it's drawn from, every drawn edge must match what the code actually has, every drawn class must actually
-  exist in the code, and a diagram has to be drawn *at all* — Session 09 is the third session running with
-  zero diagram produced. Score history: 5/10, 6/10, 5/10, 1/10, 7/10, 5/10, 1/10, 1/10, 1/10.
-- **Pattern Choice** `[S01][S02][S03][S04][S05][S06][S07][S08][S09]` — Sessions 05 and 06 strung together two
-  correctly-wired Strategy patterns in a row; Session 07 broke that streak with a shaped-but-unwired interface;
-  Session 08 had no pattern at all; Session 09 is a *different* failure mode again, and the furthest any
-  session has gotten — the Strategy was correctly shaped **and** correctly wired via constructor injection with
-  two real implementations, but a `static` field defeated the actual per-instance swappability it was built
-  for. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10.
-- **Requirements & Entities** `[S01][S02][S03][S04][S05][S06][S07][S08][S09]` — Write the one-sentence
+  exist in the code, and a diagram has to be drawn *at all* — Session 10 is the fourth session running with
+  zero diagram produced. Score history: 5/10, 6/10, 5/10, 1/10, 7/10, 5/10, 1/10, 1/10, 1/10, 1/10.
+- **Pattern Choice** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10]` — Sessions 05 and 06 strung together
+  two correctly-wired Strategy patterns in a row; Session 07 broke that streak with a shaped-but-unwired
+  interface; Session 08 had no pattern at all; Session 09 got furthest (shaped and wired, defeated by a
+  `static` field); Session 10 is back to no pattern at all — growth was hardcoded directly into the game loop
+  despite the problem's own source naming a second, structurally different growth rule as a reported
+  follow-up. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10, 1/10.
+- **Requirements & Entities** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10]` — Write the one-sentence
   responsibility per entity as you list it, keep an out-of-scope list every session, keep the written entity
-  list in sync with the classes actually built, delete an entity the moment it's noticed to be unused, *and* —
-  Session 09's finding — a domain concept that's genuinely load-bearing (a ballot's validity, a candidate's
-  accumulated score) still needs its own entity even when a raw `List`/array can technically hold the same
-  data; Session 09 modeled both as primitives, with no validation and no named fields. Score history: 5/10,
-  5/10, 6/10, 5/10, 7/10, 5/10, 4/10, 3/10, 3/10.
+  list in sync with the classes actually built, delete an entity the moment it's noticed to be unused, a
+  domain concept that's genuinely load-bearing still needs its own entity even when a primitive can
+  technically hold the same data, *and* — Session 10's finding — a field shared by every variant of a problem
+  shouldn't hold a concept only one variant actually has; `Board.foods` existing at all assumes every growth
+  rule involves food, which the problem's own reported variant contradicts. Score history: 5/10, 5/10, 6/10,
+  5/10, 7/10, 5/10, 4/10, 3/10, 3/10, 4/10.
 
 ## Recurring Action Items
 
@@ -72,20 +76,20 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   given their own class, and never actually constructed or read anywhere in the design. Three sessions running
   now, and Session 08 doubled up — check every entity in the list is actually referenced somewhere in the code
   before finishing the design.
-- **An unwalked functional requirement (or unwalked *branch* of one) hides the worst bugs** `[S03][S04][S06][S07][S08][S09]`
+- **An unwalked functional requirement (or unwalked *branch* of one) hides the worst bugs** `[S03][S04][S06][S07][S08][S09][S10]`
   — Session 03's cancel-a-meeting flow, Session 04's entire matching requirement, Session 06's "release with
-  nobody waiting" branch, Session 07's entire Fixed Window algorithm, Session 08's entire *year* dimension, and
-  Session 09's short-ballot case (plus either tie-break strategy, plus the static-field bug itself) were all
-  never exercised in a demo, and all six turned out to be broken or missing. Treat a requirement (or an
-  obvious branch of one) with no line in the demo as a red flag before moving on.
+  nobody waiting" branch, Session 07's entire Fixed Window algorithm, Session 08's entire *year* dimension,
+  Session 09's short-ballot case, and Session 10's tail-reversal case *and* its post-game-over continuation
+  check were all never exercised in a demo, and all seven turned out to be broken or missing. Treat a
+  requirement (or an obvious branch of one) with no line in the demo as a red flag before moving on.
 - **Pattern Choice** `[S01][S02][S03][S04]` — RESOLVED for two sessions (05, 06), but Session 07 showed one way
-  this can still fail (shaped-but-unwired), and Session 09 shows yet another: shaped **and** wired correctly,
-  but defeated by a `static` field. Checking "is the pattern's shape right?" and "is it actually wired?" isn't
-  enough either — also check how the strategy's reference is held once it's injected.
-- **Out-of-scope list regressed to zero** `[S06][S07][S08][S09]` — repeated a fourth time: Session 09 had no
-  mock-written requirements doc at all to name one in, same as Session 08. Four sessions running now with no
-  out-of-scope list — treat "name at least one out-of-scope item" as a hard checklist item for step ①, not
-  just a habit expected to stick once learned.
+  this can still fail (shaped-but-unwired), Session 09 showed another (shaped and wired, defeated by a
+  `static` field), and Session 10 regressed all the way back to no pattern at all for the thing that varies.
+  This axis's score history (6/10, 6/10, 3/10, 1/10, 4/10, 1/10 across Sessions 05-10) shows no stable trend
+  yet even after two genuinely strong sessions.
+- **Out-of-scope list regressed to zero** `[S06][S07][S08][S09][S10]` — repeated a fifth time. Five sessions
+  running now with no out-of-scope list — treat "name at least one out-of-scope item" as a hard checklist item
+  for step ①, not just a habit expected to stick once learned.
 - **Unchecked setters and raw mutable getters** `[S01][S02][S03]` — four of six early sessions have exposed
   either full public setters or a raw mutable collection/counter with no invariant checks; default to
   constructor-only fields and named, intention-revealing methods.
@@ -94,8 +98,8 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   future problem with two symmetric-but-opposite sides.
 - **No runnable demo** `[S04]` — RESOLVED in Sessions 05, 06, and 07. Watch closely whether this repeats in a
   future session.
-- **No diagram produced at all** `[S07][S08][S09]` — now three sessions running. Treat "produce at least a
-  rough as-drawn diagram" as a hard checklist item before writing any code, not an expected habit that was
+- **No diagram produced at all** `[S07][S08][S09][S10]` — now four sessions running. Treat "produce at least
+  a rough as-drawn diagram" as a hard checklist item before writing any code, not an expected habit that was
   ever actually confirmed.
 - **A `static` field assigned inside a non-static constructor** `[S09]` — new this session: per-instance
   configuration (which `TieBreakerStrategy` a `ResultService` was built with) was actually global state in

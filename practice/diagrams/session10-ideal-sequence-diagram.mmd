@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor Main
+    participant Game as SnakeGame
+    participant Snake as Snake
+    participant Policy as FoodGrowthPolicy
+
+    Main->>Game: move RIGHT, snake eats food and grows to length 2
+    Game->>Policy: shouldGrow next head
+    Policy-->>Game: true
+    Game->>Snake: wouldCollide next head, grow equals true
+    Snake-->>Game: false
+    Game->>Snake: move next head, grow equals true, tail is kept
+    Game-->>Main: score 1
+
+    Main->>Game: move LEFT, head returns to the current tail cell
+    Game->>Policy: shouldGrow next head
+    Policy-->>Game: false
+    Game->>Snake: wouldCollide next head, grow equals false
+    Note over Snake: next head equals the current tail, and the tail is about to vacate this move, so this is not a collision
+    Snake-->>Game: false
+    Game->>Snake: move next head, grow equals false, tail is popped
+    Game-->>Main: score 1, game continues
+
+    Note over Main,Policy: the practice code checked occupancy before knowing whether the tail would vacate, so this exact reversal was wrongly treated as game over

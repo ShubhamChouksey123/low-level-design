@@ -1,0 +1,49 @@
+classDiagram
+    class SnakeGame {
+        -Board board
+        -Snake snake
+        -GrowthPolicy growthPolicy
+        -boolean gameOver
+        +move(Direction) int
+    }
+    class Board {
+        -int height
+        -int width
+        +isOutside(Position) boolean
+    }
+    class Snake {
+        -Deque~Position~ body
+        -Set~Position~ occupied
+        +wouldCollide(Position, boolean) boolean
+        ~move(Position, boolean)
+    }
+    class Position {
+        -int x
+        -int y
+    }
+    class Direction {
+        <<enumeration>>
+        UP
+        DOWN
+        LEFT
+        RIGHT
+    }
+    class GrowthPolicy {
+        <<interface>>
+        +shouldGrow(Position) boolean
+    }
+    class FoodGrowthPolicy {
+        -List~Position~ foods
+        -int nextFoodIndex
+    }
+    class EveryNMovesGrowthPolicy {
+        -int interval
+        -int moveCount
+    }
+
+    SnakeGame "1" --> "1" Board : uses
+    SnakeGame "1" --> "1" Snake : uses
+    SnakeGame "1" --> "1" GrowthPolicy : uses
+    Snake "1" --> "*" Position : has-a
+    FoodGrowthPolicy ..|> GrowthPolicy : implements the contract of
+    EveryNMovesGrowthPolicy ..|> GrowthPolicy : implements the contract of
