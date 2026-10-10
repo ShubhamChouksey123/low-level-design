@@ -1,0 +1,27 @@
+classDiagram
+    class VotingService {
+        -TieBreakStrategy tieBreakStrategy
+        +getResults(List~Ballot~) List~String~
+    }
+    class Ballot {
+        -List~String~ rankedCandidates
+    }
+    class CandidateTally {
+        -String name
+        -int[] positionCounts
+        -int totalPoints
+        -int lastContributingBallotIndex
+        ~recordVote(int, int)
+    }
+    class TieBreakStrategy {
+        <<interface>>
+        +compare(CandidateTally, CandidateTally) int
+    }
+    class RankPositionTieBreakStrategy
+    class EarliestToReachTieBreakStrategy
+
+    VotingService "1" --> "1" TieBreakStrategy : uses
+    VotingService "1" --> "*" Ballot : uses
+    VotingService "1" --> "*" CandidateTally : uses
+    RankPositionTieBreakStrategy ..|> TieBreakStrategy : implements the contract of
+    EarliestToReachTieBreakStrategy ..|> TieBreakStrategy : implements the contract of

@@ -1,0 +1,14 @@
+sequenceDiagram
+    actor Main
+    participant RankSvc as VotingService using RankPosition
+    participant EarlySvc as VotingService using EarliestToReach
+
+    Main->>RankSvc: getResults ballots where A and B both total 3 points
+    Note over RankSvc: A has one first place vote, B has zero, so A ranks above B
+    RankSvc-->>Main: X, Y, A, B
+
+    Main->>EarlySvc: getResults the same ballots
+    Note over EarlySvc: B's score was finalized at ballot index 1, A's only at index 2, so B ranks above A
+    EarlySvc-->>Main: X, Y, B, A
+
+    Note over Main,EarlySvc: same input, same total points tie, two different correct winners - this is why the tie break has to be a swappable Strategy, not a single hardcoded rule
