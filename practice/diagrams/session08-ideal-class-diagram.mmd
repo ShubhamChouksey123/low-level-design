@@ -1,0 +1,71 @@
+classDiagram
+    class BillingService {
+        -ProductCatalog productCatalog
+        -UsageRepository usageRepository
+        -TrialPolicy trialPolicy
+        -DiscountPolicy discountPolicy
+        +generateMonthlyBill(int, YearMonth) Bill
+        +monthlyBills(int, int) List~Bill~
+        +annualCost(int, int) BigDecimal
+    }
+    class ProductCatalog {
+        -Map~int,Product~ productsById
+        +register(Product)
+        +getProduct(int) Product
+    }
+    class UsageRepository {
+        -Map~int,Map~ usageByUserThenPeriod
+        +recordUsage(int, UsageRecord)
+        +getUsage(int, YearMonth) List~UsageRecord~
+    }
+    class Product {
+        -int id
+        -String name
+        -BigDecimal monthlyPrice
+    }
+    class UsageRecord {
+        -int productId
+        -YearMonth period
+        -int daysUsed
+    }
+    class Bill {
+        -YearMonth period
+        -List~BillLineItem~ lineItems
+        -BigDecimal subtotal
+        -BigDecimal discount
+        -BigDecimal total
+    }
+    class BillLineItem {
+        -String productName
+        -int billableDays
+        -BigDecimal amount
+    }
+    class TrialPolicy {
+        <<interface>>
+        +billableDays(Product, int) int
+    }
+    class DiscountPolicy {
+        <<interface>>
+        +discountFor(BigDecimal, List~BillLineItem~) BigDecimal
+    }
+    class NoTrialPolicy
+    class FixedTrialPeriodPolicy {
+        -int trialDays
+    }
+    class NoDiscountPolicy
+    class BundleDiscountPolicy {
+        -BigDecimal percentOff
+        -int minProductCount
+    }
+
+    BillingService "1" --> "1" ProductCatalog : uses
+    BillingService "1" --> "1" UsageRepository : uses
+    BillingService "1" --> "1" TrialPolicy : uses
+    BillingService "1" --> "1" DiscountPolicy : uses
+    ProductCatalog "1" --> "*" Product : has-a
+    UsageRepository "1" --> "*" UsageRecord : has-a
+    Bill "1" --> "*" BillLineItem : has-a
+    NoTrialPolicy ..|> TrialPolicy : implements the contract of
+    FixedTrialPeriodPolicy ..|> TrialPolicy : implements the contract of
+    NoDiscountPolicy ..|> DiscountPolicy : implements the contract of
+    BundleDiscountPolicy ..|> DiscountPolicy : implements the contract of

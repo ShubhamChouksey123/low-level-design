@@ -1,0 +1,28 @@
+sequenceDiagram
+    actor Main
+    participant Billing as BillingService
+    participant Usage as UsageRepository
+    participant Catalog as ProductCatalog
+    participant Trial as TrialPolicy
+
+    Main->>Billing: generateMonthlyBill user 1, Feb 2025
+    Billing->>Usage: getUsage user 1, Feb 2025
+    Usage-->>Billing: JIRA used 20 days
+    Billing->>Catalog: getProduct JIRA
+    Catalog-->>Billing: JIRA, 10 dollars per month
+    Billing->>Trial: billableDays JIRA, 20
+    Trial-->>Billing: 20 billable days
+    Note over Billing: amount equals 10 times 20 divided by 28, Feb 2025 has 28 days
+    Billing-->>Main: line item JIRA 7.14 dollars
+
+    Main->>Billing: generateMonthlyBill user 1, Feb 2024
+    Billing->>Usage: getUsage user 1, Feb 2024
+    Usage-->>Billing: JIRA used 20 days
+    Billing->>Catalog: getProduct JIRA
+    Catalog-->>Billing: JIRA, 10 dollars per month
+    Billing->>Trial: billableDays JIRA, 20
+    Trial-->>Billing: 20 billable days
+    Note over Billing: amount equals 10 times 20 divided by 29, Feb 2024 is a leap year with 29 days
+    Billing-->>Main: line item JIRA 6.90 dollars
+
+    Note over Main,Trial: same raw usage, different real months, different correct totals - this is the fix for the practice code's hardcoded 30 day divisor
