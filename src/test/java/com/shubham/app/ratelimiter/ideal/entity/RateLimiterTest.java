@@ -9,6 +9,8 @@ import com.shubham.app.ratelimiter.ideal.service.TokenBucketRateLimitingAlgorith
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -150,10 +152,58 @@ class RateLimiterTest {
         executor.shutdown();
         assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
 
-        // If the check-then-create-then-store race (identified in the practice review)
-        // were
-        // still present, a lost window could let more than maxRequestsPerWindow
-        // through.
+        // If RateLimiter's computeIfAbsent lost the create-once-per-key race, or if the
+        // algorithm's own allowRequest weren't synchronized, two threads could each see
+        // a
+        // consistent-looking state and both be let through, allowing more than
+        // maxRequestsPerWindow.
         assertEquals(maxRequestsPerWindow, allowedCount.get());
+    }
+
+    // RateLimiter intentionally does not hold one lock around every client's call -
+    // only
+    // concurrent requests for the *same* client need to be serialized (by that
+    // client's own
+    // algorithm instance), not requests for different clients. This fires many
+    // different
+    // clients concurrently, each hammering well past its own limit, and checks
+    // every single
+    // client's count independently - a bug in the per-key get-or-create logic (e.g.
+    // two threads
+    // building separate algorithm instances for the same new client) would show up
+    // as some
+    // client's count being wrong, not just the aggregate.
+    @Test
+    void differentClientsAreRateLimitedIndependentlyUnderConcurrentAccess() throws InterruptedException {
+        int maxRequestsPerWindow = 3;
+        int clientCount = 20;
+        int requestsPerClient = 10;
+        RateLimiter rateLimiter = new RateLimiter(
+                new FixedWindowRateLimitingAlgorithmFactory(maxRequestsPerWindow, Duration.ofSeconds(10)));
+        Instant now = Instant.parse("2026-01-01T00:00:00Z");
+
+        ConcurrentMap<String, AtomicInteger> allowedCountByClient = new ConcurrentHashMap<>();
+        ExecutorService executor = Executors.newFixedThreadPool(clientCount);
+        for (int c = 0; c < clientCount; c++) {
+            String clientId = "user" + c;
+            allowedCountByClient.put(clientId, new AtomicInteger());
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < requestsPerClient; i++) {
+                        if (rateLimiter.allowRequest(clientId, now)) {
+                            allowedCountByClient.get(clientId).incrementAndGet();
+                        }
+                    }
+                }
+            });
+        }
+
+        executor.shutdown();
+        assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+
+        for (AtomicInteger allowedCount : allowedCountByClient.values()) {
+            assertEquals(maxRequestsPerWindow, allowedCount.get());
+        }
     }
 }

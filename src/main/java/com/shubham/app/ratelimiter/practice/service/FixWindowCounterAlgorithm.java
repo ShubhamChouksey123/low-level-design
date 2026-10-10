@@ -25,7 +25,7 @@ public class FixWindowCounterAlgorithm implements RateLimitAlgorithm {
      * @param timestamp
      * @return
      */
-    public boolean addRequest(Instant timestamp) {
+    public synchronized boolean addRequest(Instant timestamp) {
         if (!windows.isEmpty()) {
             Instant windowStart = windows.peekFirst();
             Duration elapsed = Duration.between(windowStart, timestamp);

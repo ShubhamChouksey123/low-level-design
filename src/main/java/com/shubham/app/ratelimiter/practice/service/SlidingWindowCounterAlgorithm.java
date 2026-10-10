@@ -19,7 +19,7 @@ public class SlidingWindowCounterAlgorithm implements RateLimitAlgorithm {
         this.windowSize = windowSize;
     }
 
-    public boolean addRequest(Instant timestamp) {
+    public synchronized boolean addRequest(Instant timestamp) {
 
         while (!windows.isEmpty()) {
 

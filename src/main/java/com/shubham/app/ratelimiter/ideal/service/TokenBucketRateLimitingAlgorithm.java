@@ -49,7 +49,7 @@ public class TokenBucketRateLimitingAlgorithm implements RateLimitingAlgorithm {
     }
 
     @Override
-    public boolean allowRequest(Instant timestamp) {
+    public synchronized boolean allowRequest(Instant timestamp) {
         if (lastRefillTimestamp != null) {
             BigDecimal elapsedNanos = BigDecimal.valueOf(Duration.between(lastRefillTimestamp, timestamp).toNanos());
             BigDecimal elapsedSeconds = elapsedNanos.divide(NANOS_PER_SECOND, ELAPSED_SECONDS_SCALE,

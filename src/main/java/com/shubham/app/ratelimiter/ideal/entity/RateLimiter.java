@@ -3,13 +3,14 @@ package com.shubham.app.ratelimiter.ideal.entity;
 import com.shubham.app.ratelimiter.ideal.exception.InvalidRateLimiterConfigException;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 public class RateLimiter {
 
     private final RateLimitingAlgorithmFactory algorithmFactory;
-    private final Map<String, RateLimitingAlgorithm> clientIdToAlgorithm = new HashMap<>();
+    private final ConcurrentMap<String, RateLimitingAlgorithm> clientIdToAlgorithm = new ConcurrentHashMap<>();
 
     public RateLimiter(RateLimitingAlgorithmFactory algorithmFactory) {
         if (algorithmFactory == null) {
@@ -18,12 +19,14 @@ public class RateLimiter {
         this.algorithmFactory = algorithmFactory;
     }
 
-    public synchronized boolean allowRequest(String clientId, Instant timestamp) {
-        RateLimitingAlgorithm algorithm = clientIdToAlgorithm.get(clientId);
-        if (algorithm == null) {
-            algorithm = algorithmFactory.create();
-            clientIdToAlgorithm.put(clientId, algorithm);
-        }
+    public boolean allowRequest(String clientId, Instant timestamp) {
+        RateLimitingAlgorithm algorithm = clientIdToAlgorithm.computeIfAbsent(clientId,
+                new Function<String, RateLimitingAlgorithm>() {
+                    @Override
+                    public RateLimitingAlgorithm apply(String id) {
+                        return algorithmFactory.create();
+                    }
+                });
         return algorithm.allowRequest(timestamp);
     }
 }

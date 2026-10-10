@@ -30,8 +30,8 @@ claim below — it slots in through the exact same `RateLimitingAlgorithmFactory
 
 | Entity | Responsibility |
 |---|---|
-| `RateLimiter` | Owns one `clientId -> RateLimitingAlgorithm` map and the single lock guarding it. The only place a client's algorithm instance is created or looked up. |
-| `RateLimitingAlgorithm` (interface) | One client's rate-limiting state + decision for one algorithm. Never shared across clients. |
+| `RateLimiter` | Owns one `clientId -> RateLimitingAlgorithm` map (a `ConcurrentHashMap`) — the only place a client's algorithm instance is created or looked up, with no class-wide lock around it. |
+| `RateLimitingAlgorithm` (interface) | One client's rate-limiting state + decision for one algorithm. Never shared across clients; each implementation must `synchronize` its own `allowRequest`. |
 | `RateLimitingAlgorithmFactory` (interface) | The Strategy: builds a fresh `RateLimitingAlgorithm` for a client's first request. Which factory `RateLimiter` holds decides which algorithm is enforced. |
 | `FixedWindowRateLimitingAlgorithm` / `SlidingWindowRateLimitingAlgorithm` / `TokenBucketRateLimitingAlgorithm` | The three concrete algorithms. |
 | `FixedWindowRateLimitingAlgorithmFactory` / `SlidingWindowRateLimitingAlgorithmFactory` / `TokenBucketRateLimitingAlgorithmFactory` | Build the corresponding algorithm, holding its own config (`maxRequestsPerWindow`/`windowSize`, or `bucketCapacity`/`tokensPerSecond`). |
@@ -176,19 +176,30 @@ locked in by
 ## ⑧ Concurrency & Extensibility
 
 **Concurrency** — this directly addresses `rate-limiter.md`'s Stage 4 and a race flagged in the
-`practice/` review:
-- `RateLimiter.allowRequest` is one `synchronized` method — the lookup-or-create of a client's algorithm
-  and the delegated `allowRequest` call happen as one atomic step, the same boundary convention as every
-  other resource entity in this repo (`ParkingLot`, `MeetingRoomBoard`, `ConnectionPool`, `LRUCache`).
-  This specifically closes the check-then-act race the practice review found: two threads racing on the
-  same brand-new client's first request can no longer each create their own algorithm instance and have one
-  silently overwrite (and lose the request recorded by) the other.
+`practice/` review, but deliberately does **not** use one lock around every call, unlike this repo's other
+resource entities (`ParkingLot`, `MeetingRoomBoard`, `ConnectionPool`, `LRUCache`). Those are genuinely
+*shared* resource pools — every caller contends for the same pool of spots/rooms/connections, so one lock
+is the correct boundary. A rate limiter is different: each client's state is already fully independent of
+every other client's, so a single `RateLimiter`-wide lock would serialize unrelated clients against each
+other for no correctness reason — only concurrent requests for the *same* client actually need to be
+serialized.
+
+- `RateLimiter.clientIdToAlgorithm` is a `ConcurrentHashMap`, and the lookup-or-create step uses
+  `computeIfAbsent` — this guarantees the factory's `create()` runs **at most once** per `clientId` even
+  under concurrent first requests, without taking a lock that would block unrelated `clientId`s. This closes
+  the check-then-act race the practice review found (two threads building separate algorithm instances for
+  the same new client, one silently overwriting the other).
+- Each concrete `RateLimitingAlgorithm` (`FixedWindowRateLimitingAlgorithm`,
+  `SlidingWindowRateLimitingAlgorithm`, `TokenBucketRateLimitingAlgorithm`) makes its own `allowRequest`
+  `synchronized`. This is where the *actual* shared mutable state lives (the `Deque`/`BigDecimal` fields),
+  and synchronizing on each instance's own monitor means two threads calling the same client's algorithm are
+  serialized, while two threads calling two different clients' algorithms (different instances, different
+  monitors) run fully in parallel — no shared lock between them at all.
 - `RateLimiterTest#concurrentFirstRequestsForTheSameNewClientNeverLoseAWindow` fires many concurrent first
-  requests for one new client and asserts exactly `maxRequestsPerWindow` are allowed — if the race were
-  still present, more could slip through.
-- The individual algorithm classes (`FixedWindowRateLimitingAlgorithm`/`SlidingWindowRateLimitingAlgorithm`)
-  are **not** separately synchronized — like `Connection`'s mutators in the connection-pool `ideal/` design,
-  they're only ever reachable through `RateLimiter`'s lock, so a second lock inside them would be redundant.
+  requests for one new client and asserts exactly `maxRequestsPerWindow` are allowed.
+  `RateLimiterTest#differentClientsAreRateLimitedIndependentlyUnderConcurrentAccess` fires many *different*
+  clients concurrently and asserts every single client's count is independently correct — a regression test
+  for the per-key `computeIfAbsent` logic specifically, not just the aggregate.
 
 **Extensibility:**
 - Token Bucket (Stage 3) proved this: one new `RateLimitingAlgorithm` + one new

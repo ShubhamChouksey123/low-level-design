@@ -35,7 +35,7 @@ public class FixedWindowRateLimitingAlgorithm implements RateLimitingAlgorithm {
     }
 
     @Override
-    public boolean allowRequest(Instant timestamp) {
+    public synchronized boolean allowRequest(Instant timestamp) {
         if (!windowRequests.isEmpty()) {
             Instant windowStart = windowRequests.peekFirst();
             if (Duration.between(windowStart, timestamp).compareTo(windowSize) >= 0) {

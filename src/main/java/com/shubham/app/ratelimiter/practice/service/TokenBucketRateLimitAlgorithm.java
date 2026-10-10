@@ -26,7 +26,7 @@ public class TokenBucketRateLimitAlgorithm implements RateLimitAlgorithm {
     }
 
     @Override
-    public boolean addRequest(Instant timestamp) {
+    public synchronized boolean addRequest(Instant timestamp) {
 
         if (lastRefillTimestamp != null) {
 

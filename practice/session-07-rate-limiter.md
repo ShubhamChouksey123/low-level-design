@@ -101,7 +101,7 @@ What the code's actual (undrawn) relationships are:
 | `practice/service/RateLimiterService.java:30` hardcodes `new SlidingWindowCounter(...)`, so `RateLimitChecker`'s two implementations are never actually selected between — `FixWindowCounter` was unreachable, dead code. | Accept the algorithm as a constructor-injected Strategy (a factory, since each client needs its own stateful instance) — see `ideal/RateLimiter`. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ④ Pattern Choice |
 | `practice/entity/FixWindowCounter.java`'s original submission: `addRequest` was `private`, unreachable, and its body was a commented-out `windows.push(request)` with a hardcoded `return false` — Stage 1 was stubbed, not implemented. | Completed in-session (see "Update" note above); `ideal/FixedWindowRateLimitingAlgorithm` is the finished, tested version. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ⑤ Core Classes/Interfaces |
 | No diagram — as-drawn or otherwise — was produced anywhere for this mock. | Draw the as-drawn diagram, even a rough one, before moving to code; this axis can't score above the floor without one. | [`concepts/uml-diagrams.md`](../concepts/uml-diagrams.md#1-class-diagram) |
-| `practice/service/RateLimiterService.java:26-32` — a check-then-act race: two threads hitting a brand-new client concurrently can each build their own `SlidingWindowCounter`, and the second `put` silently discards the first's recorded request. Nothing here (or in either counter) is `synchronized`, despite Stage 4 asking for thread-safety by name. | One `synchronized` method as the atomicity boundary, as in every other resource entity in this repo — see `ideal/RateLimiter.allowRequest`. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ⑧ Concurrency & Extensibility |
+| `practice/service/RateLimiterService.java:26-32` — a check-then-act race: two threads hitting a brand-new client concurrently can each build their own `SlidingWindowCounter`, and the second `put` silently discards the first's recorded request. Nothing here (or in either counter) is `synchronized`, despite Stage 4 asking for thread-safety by name. | A `ConcurrentHashMap` + `computeIfAbsent` for the per-client lookup-or-create, plus a `synchronized` method on each algorithm for its own state — not one lock around every client, since unrelated clients don't need to be serialized against each other. See `ideal/RateLimiter` + ⑧ below. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ⑧ Concurrency & Extensibility |
 | No custom exception anywhere in `practice/` — a non-positive `maxLimit`, a null/non-positive `rollingInterval`, or a null `Instant` all fail silently or with a raw NPE instead of a named failure. | `InvalidRateLimiterConfigException`, thrown at construction — see `ideal/`. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ⑥ Exception Handling |
 | `practice/entity/Request.java:7` — `userId` is stored in every queued `Request` but has no getter; it's dead data riding along in the deque, never read by either counter. | `ideal/` dropped the `Request` wrapper entirely — the algorithms operate directly on `Instant`, since it's `RateLimiter` (not the algorithm) that's keyed per client. | [`concepts/answer-framework.md`](../concepts/answer-framework.md) ② Core Entities & Responsibilities |
 | `practice/service/RateLimiterService.java:14` — `userToChecker` never evicts a client's state; a one-off caller occupies memory forever. | **Not fixed in `ideal/` either** — explicitly scoped out there as "idle-client cleanup." Flagging this as a known, still-open gap rather than silently treating it as solved. | [`rate-limiter.md`](../src/main/java/com/shubham/app/ratelimiter/practice/rate-limiter.md)'s own "Cleanup/memory" question |
@@ -269,10 +269,17 @@ locks this in.
 
 ### ⑧ Concurrency & Extensibility
 
-**Concurrency:** `RateLimiter.allowRequest` is one `synchronized` method — the lookup-or-create of a client's
-algorithm and the delegated `allowRequest` call happen as one atomic step, closing the check-then-act race from
-lost-point #4. `RateLimiterTest#concurrentFirstRequestsForTheSameNewClientNeverLoseAWindow` fires many
-concurrent first requests for one new client and asserts exactly `maxRequestsPerWindow` are allowed.
+**Concurrency:** a first version of this made `RateLimiter.allowRequest` one `synchronized` method — simple,
+and it did close the check-then-act race from lost-point #4, but it also meant *every* client's requests
+were serialized against *every other* client's, with no correctness reason for it (each client's state is
+already independent). That was caught and fixed: `RateLimiter.clientIdToAlgorithm` is now a
+`ConcurrentHashMap`, and the lookup-or-create uses `computeIfAbsent` (atomic per key, so unrelated
+`clientId`s never block each other); each concrete `RateLimitingAlgorithm` makes its own `allowRequest`
+`synchronized` instead, so only concurrent calls for the *same* client (same instance, same monitor) are
+serialized. `RateLimiterTest#concurrentFirstRequestsForTheSameNewClientNeverLoseAWindow` still covers the
+same-client race, and `RateLimiterTest#differentClientsAreRateLimitedIndependentlyUnderConcurrentAccess` is
+the new regression test proving different clients stay correct — and independent — under this finer-grained
+locking.
 
 **Extensibility:** Token Bucket (Stage 3) proved this: one new `RateLimitingAlgorithm` + one new
 `RateLimitingAlgorithmFactory`, zero changes to `RateLimiter` (see ④). A per-client-configurable limit is
@@ -304,6 +311,12 @@ every client it serves.
    doesn't divide evenly — for anything accumulating a fractional quantity over many small time steps (like
    token refill), that's not a rounding nicety, it's the difference between "refills correctly" and "never
    refills at all" for realistic sub-second request rates.
+8. "Correct" and "correctly scoped" are different bars for a lock. One `synchronized` method around every
+   client's call was *correct* (no lost windows), but it was also wrong for a per-client resource — it
+   serialized clients that share no state at all. When the thing being protected is naturally partitioned
+   (one independent algorithm instance per key), ask whether the lock should be partitioned the same way
+   (`ConcurrentHashMap.computeIfAbsent` + a lock per instance) instead of defaulting to one lock for
+   everything.
 
 > Rehearse this against [`concepts/answer-framework.md`](../concepts/answer-framework.md) before the next mock.
 

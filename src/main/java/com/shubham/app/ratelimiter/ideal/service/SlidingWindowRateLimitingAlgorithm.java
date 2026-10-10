@@ -39,7 +39,7 @@ public class SlidingWindowRateLimitingAlgorithm implements RateLimitingAlgorithm
     }
 
     @Override
-    public boolean allowRequest(Instant timestamp) {
+    public synchronized boolean allowRequest(Instant timestamp) {
         while (!windowRequests.isEmpty()) {
             Instant oldest = windowRequests.peekFirst();
             if (Duration.between(oldest, timestamp).compareTo(windowSize) < 0) {
