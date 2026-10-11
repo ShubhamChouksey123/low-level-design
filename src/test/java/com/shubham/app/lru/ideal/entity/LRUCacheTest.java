@@ -133,4 +133,37 @@ class LRUCacheTest {
         }
         assertTrue(presentCount <= capacity);
     }
+
+    // Companion to the put-only test above: interleaves get and put from many
+    // threads at once, mirroring the practice package's thread-safety escalation
+    // test (LruTest#concurrentAddAndGetNeverCorruptOrOvergrowTheCache), so both
+    // mutating entry points are exercised together, not just put in isolation.
+    @Test
+    void concurrentGetsAndPutsNeverCorruptTheCache() throws InterruptedException {
+        int capacity = 10;
+        LRUCache<Integer, Integer> cache = new LRUCache<>(capacity, null);
+
+        ExecutorService executor = Executors.newFixedThreadPool(capacity);
+        for (int i = 0; i < capacity * 5; i++) {
+            int key = i;
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    cache.put(key, key);
+                    cache.get(key % capacity);
+                }
+            });
+        }
+
+        executor.shutdown();
+        assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS));
+
+        int presentCount = 0;
+        for (int i = 0; i < capacity * 5; i++) {
+            if (cache.get(i).isPresent()) {
+                presentCount++;
+            }
+        }
+        assertTrue(presentCount <= capacity);
+    }
 }

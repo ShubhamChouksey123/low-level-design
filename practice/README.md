@@ -25,7 +25,7 @@ Sessions table plus the two tracker sections that aggregate *across* every sessi
 | 08 | [Subscription / Billing Service](session-08-subscription-billing.md) | 3/10 | 1/10 | 1/10 | 2/10 | 2/10 | **1.8/10** | ❌ Needs work |
 | 09 | [Voting Algorithm](session-09-voting-algorithm.md) | 3/10 | 1/10 | 4/10 | 1/10 | 2/10 | **2.2/10** | ❌ Needs work |
 | 10 | [Design Snake Game](session-10-snake-game.md) | 4/10 | 1/10 | 1/10 | 2/10 | 2/10 | **2.0/10** | ❌ Needs work |
-| 11 | [LRU Cache](session-11-lru-cache.md) | 3/10 | 1/10 | 1/10 | 3/10 | 4/10 | **2.4/10** | ❌ Needs work |
+| 11 | [LRU Cache, plus thread-safety escalation](session-11-lru-cache.md) | 3/10 | 1/10 | 1/10 | 6/10 | 5/10 | **3.2/10** | ❌ Needs work |
 
 Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borderline 5.5–6.9 · ❌ Needs work < 5.5.
 
@@ -39,20 +39,22 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   for it, every stage/branch named in the problem statement, when the problem statement itself scopes the API
   check the method signature actually matches that sentence, a size constraint phrased as "up to N" means
   smaller inputs are valid, a state machine's "losing" branch needs a follow-up call tried against it too, not
-  just the branch itself, *and* — Session 11's finding — "insert or update" in a problem statement names two
-  behaviors in one sentence; Session 11's demo only ever exercised insert, which hid a real bug (the value
-  never updating) in the update path. Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10,
-  2/10, 4/10.
+  just the branch itself, *and* — Session 11's two findings — "insert or update" in a problem statement names
+  two behaviors in one sentence (the demo only ever exercised insert, hiding a real bug in the update path),
+  and "make X safe for concurrent access" has its own deliverable, a multithreaded test that can actually fail
+  if the fix is wrong — Session 11's thread-safety escalation had no such test until it was requested as a
+  separate, explicit follow-up. Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10, 2/10, 5/10.
 - **Implementation & Exceptions** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Default to no
   setter unless something outside the constructor genuinely needs to mutate that field, validate every
   invariant where the mutation actually happens, a config value that varies by context shouldn't be stored as
   a field on an unrelated entity, a `static` field assigned inside a non-static constructor turns per-instance
   configuration into shared global state, a boolean/collision check that depends on what else happens *this
   same step* has to be computed in dependency order, not have the dependent fact baked in as already decided,
-  *and* — Session 11's finding — a mutator that can either insert or update needs a setter for the field it
-  updates; `Node` had no `setValue` at all, so the "update" branch of `add` could move an entry's position but
-  structurally could not touch its payload. Score history: 5/10, 5/10, 4/10, 1/10, 6/10, 4/10, 3/10, 2/10,
-  1/10, 2/10, 3/10.
+  *and* — Session 11's two findings — a mutator that can either insert or update needs a setter for the field
+  it updates (`Node` had no `setValue` at all), and a new class (even a tiny exception) should be checked
+  against the repo's existing package convention before it's placed — `InvaliCapacityException` was both
+  misspelled and placed outside the `exception/` sub-package every other design uses, caught only on review.
+  Score history: 5/10, 5/10, 4/10, 1/10, 6/10, 4/10, 3/10, 2/10, 1/10, 2/10, 6/10.
 - **Class Diagram & Relationships** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Every service
   class must have at least one relationship line to the entities it operates on, each label must match the
   field it's drawn from, every drawn edge must match what the code actually has, every drawn class must
@@ -62,18 +64,21 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   together two correctly-wired Strategy patterns in a row; Session 07 broke that streak with a
   shaped-but-unwired interface; Session 08 had no pattern at all; Session 09 got furthest (shaped and wired,
   defeated by a `static` field); Session 10 was back to no pattern at all despite the problem's own source
-  naming a second growth rule; Session 11 is a special case worth naming separately — "no pattern" is actually
-  the *correct* answer here (eviction order is structural, not pluggable, per the ideal design's own
-  reasoning), but the practice session never reached that conclusion deliberately, it just never raised the
-  question. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10.
+  naming a second growth rule; Session 11 showed two more failure modes in the same session — "no pattern" was
+  actually the correct call for eviction order (reached by never asking the question, not by deliberate
+  justification), and its thread-safety escalation was a pure concurrency-control decision (coarse-grained
+  `synchronized`, correctly chosen) with no written rationale either — the same undocumented-justification gap
+  twice over. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10.
 - **Requirements & Entities** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Write the
   one-sentence responsibility per entity as you list it, keep an out-of-scope list every session, keep the
   written entity list in sync with the classes actually built, delete an entity the moment it's noticed to be
   unused, a domain concept that's genuinely load-bearing still needs its own entity even when a primitive can
   technically hold the same data, a field shared by every variant of a problem shouldn't hold a concept only
-  one variant actually has, *and* — Session 11's finding — a correct entity list is not the same as a
-  *documented* one; `Node`/`Lru` were the right two entities but neither had a written responsibility sentence
-  anywhere. Score history: 5/10, 5/10, 6/10, 5/10, 7/10, 5/10, 4/10, 3/10, 3/10, 4/10, 3/10.
+  one variant actually has, *and* — Session 11's two findings — a correct entity list is not the same as a
+  *documented* one (`Node`/`Lru` were the right entities, neither had a written responsibility sentence), and
+  an escalation on an existing problem (new concurrency requirement, same entities) still needs its own written
+  scope statement; nothing named *what* needed protecting or *why* the chosen lock granularity was enough.
+  Score history: 5/10, 5/10, 6/10, 5/10, 7/10, 5/10, 4/10, 3/10, 3/10, 4/10, 3/10.
 
 ## Recurring Action Items
 
@@ -86,16 +91,18 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   — Session 03's cancel-a-meeting flow, Session 04's entire matching requirement, Session 06's "release with
   nobody waiting" branch, Session 07's entire Fixed Window algorithm, Session 08's entire *year* dimension,
   Session 09's short-ballot case, Session 10's tail-reversal case *and* its post-game-over continuation check,
-  and Session 11's re-`add`-on-an-existing-key path were all never exercised in a demo, and every one of them
-  turned out to be broken or missing. Treat a requirement (or an obvious branch of one) with no line in the
-  demo as a red flag before moving on.
+  and Session 11's re-`add`-on-an-existing-key path *and*, separately, its thread-safety escalation (no
+  concurrent test existed until requested as a separate follow-up) were all never exercised in a demo/test, and
+  every one of them turned out to be broken, missing, or unverified. Treat a requirement (or an obvious branch
+  of one) with no line in the demo/tests as a red flag before moving on.
 - **Pattern Choice** `[S01][S02][S03][S04]` — RESOLVED for two sessions (05, 06), but Session 07 showed one way
   this can still fail (shaped-but-unwired), Session 09 showed another (shaped and wired, defeated by a
   `static` field), Session 10 regressed all the way back to no pattern at all for the thing that varies, and
-  Session 11 showed a third failure mode: "no pattern" was actually the right call, but reached by never
-  asking the question rather than by deliberate justification. This axis's score history (6/10, 6/10, 3/10,
-  1/10, 4/10, 1/10, 1/10 across Sessions 05-11) shows no stable trend yet even after two genuinely strong
-  sessions.
+  Session 11 showed two more failure modes in the same session: "no pattern" was actually the right call for
+  eviction order but reached by never asking the question, and its thread-safety escalation was the right
+  concurrency-control decision made correctly, with no written rationale for the choice at all. This axis's
+  score history (6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10 across Sessions 05-11) shows no stable trend yet even
+  after two genuinely strong sessions.
 - **Out-of-scope list regressed to zero** `[S06][S07][S08][S09][S10][S11]` — repeated a sixth time. Six
   sessions running now with no out-of-scope list — treat "name at least one out-of-scope item" as a hard
   checklist item for step ①, not just a habit expected to stick once learned.

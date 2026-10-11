@@ -101,6 +101,9 @@ used": recency of *access*, not recency of *insertion*, decides who gets evicted
   (`ParkingLot`, `MeetingRoomBoard`, `OrderBook`, `ConnectionPool`).
 - A test (`LRUCacheTest#concurrentPutsNeverGrowTheCacheBeyondItsCapacity`) fires far more concurrent puts than the
   capacity allows and checks the cache never holds more entries than its capacity.
+- A companion test (`LRUCacheTest#concurrentGetsAndPutsNeverCorruptTheCache`) interleaves `get` and `put` from
+  many threads at once, exercising both entry points together rather than `put` in isolation — mirroring the
+  practice package's own thread-safety-escalation test.
 
 **Extensibility:**
 - A new eviction side-effect (write-through to a database, metrics) → one new `EvictionListener` implementation,
