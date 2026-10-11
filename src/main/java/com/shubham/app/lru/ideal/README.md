@@ -1,9 +1,11 @@
 # LRU Cache — Ideal Design (implemented)
 
-A standalone reference design — there was no mock/practice attempt to review first for this one, so this
-package (and this doc) is written directly against
-[`concepts/answer-framework.md`](../../../../../../../concepts/answer-framework.md)'s 8 steps, the same way every
-other `ideal/` package in this repo is structured.
+This package was originally written directly against
+[`concepts/answer-framework.md`](../../../../../../../concepts/answer-framework.md)'s 8 steps, since there was
+no mock/practice attempt to review yet at the time. A practice attempt now exists at
+[`practice/`](../practice) and has been reviewed — see
+[`practice/session-11-lru-cache.md`](../../../../../../../practice/session-11-lru-cache.md) for that review and
+how it compares against this design.
 
 ## ① Functional Requirements & Scope
 
