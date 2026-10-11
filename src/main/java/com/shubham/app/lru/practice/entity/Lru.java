@@ -1,5 +1,7 @@
 package com.shubham.app.lru.practice.entity;
 
+import com.shubham.app.lru.practice.exception.InvalidCapacityException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +14,11 @@ public class Lru<K, V> {
     private Map<K, Node<K, V>> keyToNode;
 
     public Lru(int capacity) {
+
+        if (capacity <= 0) {
+            throw new InvalidCapacityException("capacity can't be zero or negative");
+        }
+
         this.capacity = capacity;
         this.first = new Node<>(null, null);
         this.last = new Node<>(null, null);
@@ -21,7 +28,7 @@ public class Lru<K, V> {
         last.setPrev(first);
     }
 
-    public void add(K key, V value) {
+    public synchronized void add(K key, V value) {
 
         Node<K, V> node = keyToNode.get(key);
         if (node == null) {
@@ -36,7 +43,7 @@ public class Lru<K, V> {
         addNodeAtStart(node);
     }
 
-    public Optional<V> get(K key) {
+    public synchronized Optional<V> get(K key) {
 
         Node<K, V> node = keyToNode.get(key);
         if (node == null) {
