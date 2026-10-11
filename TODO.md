@@ -49,7 +49,7 @@ Written up in [`concepts/design-principles.md`](concepts/design-principles.md):
 
 ### Concurrency & extensibility
 
-- [ ] Concurrency: synchronized vs. locks vs. atomic types, deadlock avoidance — tie to Thread Pool / Blocking Queue items below
+- [x] Concurrency: synchronized vs. locks vs. atomic types, deadlock avoidance — tie to Thread Pool / Blocking Queue items below. Written up in [`concepts/concurrency-primitives.md`](concepts/concurrency-primitives.md).
 - [ ] Extensibility trade-offs: composition vs. inheritance, interface segregation — call out explicitly in each new design's package-level notes
 
 ## Design patterns to explicitly demonstrate (one canonical example each)
