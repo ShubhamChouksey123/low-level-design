@@ -72,5 +72,16 @@ launch the packaged jar (the jar-run line is currently commented out).
 - **Formatting is enforced at build time** via the Spotless plugin (google-java-format + import ordering +
   4-space indent) bound to the Maven `compile` phase — a build fails if code isn't formatted, so run
   `./mvnw spotless:apply` before committing.
+- **Mock-interview code lives in `practice/` sub-packages**: several designs (e.g. `parkinglot`, `stocktrading`,
+  `lru`, `ratelimiter`) have a `com.shubham.app.<design>.practice` package holding the code as written during a timed
+  mock, kept separate from the polished solution. Don't "fix" or merge the practice code into the main design.
+  Each mock is logged in `practice/session-NN-<problem>.md`; follow `practice/GUIDELINES.md` (required heading
+  order, scorecard) when adding one.
+- **Study notes**: `concepts/` (OOP, SOLID/design principles, UML, `answer-framework.md`, concurrency primitives)
+  is reference material. `concurrencyprimitives` holds small demos (`reentrantlock`, `semaphore`, `volatiledemo`).
+  `TODO.md` tracks the prep roadmap and states the convention for adding a new design (package + `entity`/`dao`/
+  `service`, a `Main`, a test class, and an update to `README.md`'s list).
+- **Java version**: `pom.xml` targets Java 17; the GitHub Actions workflow (`.github/workflows/maven.yml`) builds
+  with JDK 20 on push/PR to `main`.
 - **Tests** live under `src/test/java/com/shubham/app/<designname>/...` mirroring the main package structure, using
   `spring-boot-starter-test` (JUnit 5).
