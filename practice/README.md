@@ -13,19 +13,19 @@ Sessions table plus the two tracker sections that aggregate *across* every sessi
 
 ## Sessions
 
-| # | Problem | Requirements & Entities | Class Diagram | Pattern Choice | Implementation & Exceptions | Correctness (Walkthrough) | Overall | Verdict |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| 01 | [Snake and Ladder](session-01-snake-and-ladder.md) | 5/10 | 5/10 | 2/10 | 5/10 | 2/10 | **4/10** | ❌ Needs work |
-| 02 | [Parking Lot](session-02-parking-lot.md) | 5/10 | 6/10 | 2/10 | 5/10 | 4/10 | **4.4/10** | ❌ Needs work |
-| 03 | [Meeting Room Scheduler](session-03-meeting-room-scheduler.md) | 6/10 | 5/10 | 1/10 | 4/10 | 2/10 | **3.6/10** | ❌ Needs work |
-| 04 | [Stock Trading & Matching](session-04-stock-trading.md) | 5/10 | 1/10 | 1/10 | 1/10 | 1/10 | **1.8/10** | ❌ Needs work |
-| 05 | [Stock Trading & Matching, retry](session-05-stock-trading-retry.md) | 7/10 | 7/10 | 6/10 | 6/10 | 5/10 | **6.2/10** | ⚠️ Borderline |
-| 06 | [Connection Pool](session-06-connection-pool.md) | 5/10 | 5/10 | 6/10 | 4/10 | 3/10 | **4.6/10** | ❌ Needs work |
-| 07 | [Rate Limiter](session-07-rate-limiter.md) | 4/10 | 1/10 | 3/10 | 3/10 | 3/10 | **2.8/10** | ❌ Needs work |
-| 08 | [Subscription / Billing Service](session-08-subscription-billing.md) | 3/10 | 1/10 | 1/10 | 2/10 | 2/10 | **1.8/10** | ❌ Needs work |
-| 09 | [Voting Algorithm](session-09-voting-algorithm.md) | 3/10 | 1/10 | 4/10 | 1/10 | 2/10 | **2.2/10** | ❌ Needs work |
-| 10 | [Design Snake Game](session-10-snake-game.md) | 4/10 | 1/10 | 1/10 | 2/10 | 2/10 | **2.0/10** | ❌ Needs work |
-| 11 | [LRU Cache, plus thread-safety escalation](session-11-lru-cache.md) | 3/10 | 1/10 | 1/10 | 6/10 | 5/10 | **3.2/10** | ❌ Needs work |
+| # | Problem | Requirements & Entities | Class Diagram | Pattern Choice | Implementation & Exceptions | Correctness (Walkthrough) | Overall | Verdict | Revised | Last Revision |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|:---:|---|
+| 01 | [Snake and Ladder](session-01-snake-and-ladder.md) | 5/10 | 5/10 | 2/10 | 5/10 | 2/10 | **4/10** | ❌ Needs work |  |  |
+| 02 | [Parking Lot](session-02-parking-lot.md) | 5/10 | 6/10 | 2/10 | 5/10 | 4/10 | **4.4/10** | ❌ Needs work | ✅ | 16-11-2026 |
+| 03 | [Meeting Room Scheduler](session-03-meeting-room-scheduler.md) | 6/10 | 5/10 | 1/10 | 4/10 | 2/10 | **3.6/10** | ❌ Needs work | ✅ | 16-11-2026 |
+| 04 | [Stock Trading & Matching](session-04-stock-trading.md) | 5/10 | 1/10 | 1/10 | 1/10 | 1/10 | **1.8/10** | ❌ Needs work |  |  |
+| 05 | [Stock Trading & Matching, retry](session-05-stock-trading-retry.md) | 7/10 | 7/10 | 6/10 | 6/10 | 5/10 | **6.2/10** | ⚠️ Borderline |  |  |
+| 06 | [Connection Pool](session-06-connection-pool.md) | 5/10 | 5/10 | 6/10 | 4/10 | 3/10 | **4.6/10** | ❌ Needs work |  |  |
+| 07 | [Rate Limiter](session-07-rate-limiter.md) | 4/10 | 1/10 | 3/10 | 3/10 | 3/10 | **2.8/10** | ❌ Needs work |  |  |
+| 08 | [Subscription / Billing Service](session-08-subscription-billing.md) | 3/10 | 1/10 | 1/10 | 2/10 | 2/10 | **1.8/10** | ❌ Needs work |  |  |
+| 09 | [Voting Algorithm](session-09-voting-algorithm.md) | 3/10 | 1/10 | 4/10 | 1/10 | 2/10 | **2.2/10** | ❌ Needs work |  |  |
+| 10 | [Design Snake Game](session-10-snake-game.md) | 4/10 | 1/10 | 1/10 | 2/10 | 2/10 | **2.0/10** | ❌ Needs work |  |  |
+| 11 | [LRU Cache, plus thread-safety escalation](session-11-lru-cache.md) | 3/10 | 1/10 | 1/10 | 6/10 | 5/10 | **3.2/10** | ❌ Needs work |  |  |
 
 Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borderline 5.5–6.9 · ❌ Needs work < 5.5.
 

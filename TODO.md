@@ -18,6 +18,19 @@ list and the class-diagram link when a design is added. See `CLAUDE.md` for buil
 - Null Object pattern
 - Custom HashMap
 - Elevator System (Strategy + State) — `com.shubham.app.elevatorsystem`
+- Parking Lot (Strategy for spot allocation) — `parkinglot`, mock in `practice/session-02-parking-lot.md`
+- LRU Cache (hand-rolled doubly linked list + map, thread-safe, eviction listener) — `lru`
+- Rate Limiter (Strategy + Factory: token bucket, fixed window, sliding window) — `ratelimiter`
+- Connection Pool (Strategy for connection assignment, expiry) — `connectionpool`
+- Stock Trading / Order Matching Engine (pricing Strategy) — `stocktrading`
+- Subscription Billing (discount + trial policies) — `subscriptionbilling`
+- Voting Algorithm (tie-break Strategy) — `votingalgorithm`
+- Snake Game (growth policy Strategy) — `snakegame`
+- Meeting Room Scheduler, Snake and Ladder — re-solved as mocks (`meetingscheduler2`, `snakeladder2`)
+- First Unique Number — `firstunique`
+- Concurrency primitives demos: `ReentrantLock`, `Semaphore`, `volatile` — `concurrencyprimitives`
+
+Mock-interview post-mortems for these live in `practice/session-NN-*.md`.
 
 ## Fundamentals to have crisp, on-demand explanations for
 
@@ -57,7 +70,8 @@ Written up in [`concepts/design-principles.md`](concepts/design-principles.md):
 - [x] Strategy — dispatch policy in Elevator System (`DispatchStrategy` / `NearestElevatorDispatchStrategy`)
 - [ ] Observer (Notification System / Pub-Sub)
 - [x] State — elevator motion in Elevator System (`ElevatorState` / `IdleState`, `MovingUpState`, `MovingDownState`)
-- [ ] Factory / Abstract Factory (vehicle or notification-channel creation)
+- [x] Factory — rate-limiter algorithm creation (`RateLimitAlgorithmFactory` and per-algorithm factories in `ratelimiter`)
+- [ ] Abstract Factory (vehicle or notification-channel creation)
 - [ ] Builder (complex object construction, e.g. Booking or Order)
 - [ ] Decorator (already partially demonstrated via Logging System's chain — consider a distinct decorator-only example)
 - [ ] Singleton (thread-safe, e.g. a config/registry service) — with a note on why it's often overused/anti-pattern in interviews
@@ -93,9 +107,9 @@ Written up in [`concepts/answer-framework.md`](concepts/answer-framework.md), wi
 
 Roughly ordered by how frequently they show up in SMTS-level LLD rounds:
 
-- [ ] Parking Lot (multi-level, multiple vehicle/spot types, pricing strategy)
-- [ ] LRU Cache / LFU Cache (from scratch, then compare to `java.util.LinkedHashMap` based impl)
-- [ ] **Rate Limiter (token bucket, sliding window — pluggable strategy)** — in progress now; LLD/class-design half of the problem (pluggable algorithm via Strategy, thread-safety). The scaling/distributed half is tracked separately in the sibling `system-design` repo: [`docs/company-specific/atlassian/rate-limiter.md`](https://github.com/ShubhamChouksey123/system-design/blob/master/docs/company-specific/atlassian/rate-limiter.md).
+- [x] Parking Lot (multi-level, multiple vehicle/spot types, pricing strategy)
+- [x] LRU Cache (from scratch, thread-safe) — LFU Cache and a `LinkedHashMap`-based comparison still open
+- [x] Rate Limiter (token bucket, fixed/sliding window — pluggable strategy) — done; LLD/class-design half of the problem (pluggable algorithm via Strategy, thread-safety). The scaling/distributed half is tracked separately in the sibling `system-design` repo: [`docs/company-specific/atlassian/rate-limiter.md`](https://github.com/ShubhamChouksey123/system-design/blob/master/docs/company-specific/atlassian/rate-limiter.md).
 - [ ] ATM / Vending Machine (State pattern)
 - [ ] Splitwise / Expense Sharing (settlement algorithm, group balances)
 - [ ] Ride Sharing (Uber/Lyft-style: driver-rider matching, pricing strategy)
