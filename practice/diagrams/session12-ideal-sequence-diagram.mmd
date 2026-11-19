@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant App as Request thread
+    participant L as Logger
+    participant C as ConsoleAppender
+    participant A as AsyncAppender
+    participant W as Worker thread
+    participant F as FileAppender
+
+    App->>L: info order accepted
+    Note over L: level is at or above the threshold, so continue
+    Note over L: timestamp, thread name and trace id are captured here on the request thread
+    L->>C: append event
+    C-->>L: printed
+    L->>A: append event
+    A->>A: enqueue, blocks only if the queue is full
+    A-->>L: returns immediately
+    L-->>App: returns
+
+    W->>A: take next event from the queue
+    W->>F: append event, buffered in memory
+    Note over W,F: batch size reached or flush interval elapsed
+    W->>F: flush, bulk write to disk
+
+    App->>A: close at shutdown
+    A->>A: enqueue poison marker behind all earlier events
+    W->>F: append every remaining event
+    W->>F: flush then close
+    A-->>App: close returns after the worker has finished

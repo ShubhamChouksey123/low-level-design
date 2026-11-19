@@ -26,6 +26,7 @@ Sessions table plus the two tracker sections that aggregate *across* every sessi
 | 09 | [Voting Algorithm](session-09-voting-algorithm.md) | 3/10 | 1/10 | 4/10 | 1/10 | 2/10 | **2.2/10** | ❌ Needs work |  |  |
 | 10 | [Design Snake Game](session-10-snake-game.md) | 4/10 | 1/10 | 1/10 | 2/10 | 2/10 | **2.0/10** | ❌ Needs work |  |  |
 | 11 | [LRU Cache, plus thread-safety escalation](session-11-lru-cache.md) | 3/10 | 1/10 | 1/10 | 6/10 | 5/10 | **3.2/10** | ❌ Needs work |  |  |
+| 12 | [Logging Library (Enterpret interview)](session-12-logging-library.md) | 5/10 | 1/10 | 4/10 | 2/10 | 2/10 | **2.8/10** | ❌ Needs work |  |  |
 
 Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borderline 5.5–6.9 · ❌ Needs work < 5.5.
 
@@ -33,7 +34,7 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
 
 ## Consolidated Tips (grouped by axis, weakest first)
 
-- **Correctness (Walkthrough)** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Trace the primary
+- **Correctness (Walkthrough)** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11][S12]` — Trace the primary
   flow with ≥2 actors, ≥2 uses of the same handle, every relative ordering of a range/interval check, both
   directions of a two-sided structure, the case where a demo's last action happens with nothing left waiting
   for it, every stage/branch named in the problem statement, when the problem statement itself scopes the API
@@ -43,8 +44,10 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   two behaviors in one sentence (the demo only ever exercised insert, hiding a real bug in the update path),
   and "make X safe for concurrent access" has its own deliverable, a multithreaded test that can actually fail
   if the fix is wrong — Session 11's thread-safety escalation had no such test until it was requested as a
-  separate, explicit follow-up. Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10, 2/10, 5/10.
-- **Implementation & Exceptions** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Default to no
+  separate, explicit follow-up. *and* — Session 12's finding — a flow is not walked until it is walked *as it
+  will actually run*: the README's async design looked up the trace id from the thread id in the consumer, which
+  is the worker thread, not the caller. Score history: 2/10, 4/10, 2/10, 1/10, 5/10, 3/10, 3/10, 2/10, 2/10, 2/10, 5/10, 2/10.
+- **Implementation & Exceptions** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11][S12]` — Default to no
   setter unless something outside the constructor genuinely needs to mutate that field, validate every
   invariant where the mutation actually happens, a config value that varies by context shouldn't be stored as
   a field on an unrelated entity, a `static` field assigned inside a non-static constructor turns per-instance
@@ -54,13 +57,16 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   it updates (`Node` had no `setValue` at all), and a new class (even a tiny exception) should be checked
   against the repo's existing package convention before it's placed — `InvaliCapacityException` was both
   misspelled and placed outside the `exception/` sub-package every other design uses, caught only on review.
-  Score history: 5/10, 5/10, 4/10, 1/10, 6/10, 4/10, 3/10, 2/10, 1/10, 2/10, 6/10.
-- **Class Diagram & Relationships** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Every service
+  *and* — Session 12's finding — the code can be
+  far behind the written design: a README describing a queue, a buffer and a flush policy sat next to a
+  synchronous `System.out` filter, and leftover template imports meant the build did not compile at all.
+  Score history: 5/10, 5/10, 4/10, 1/10, 6/10, 4/10, 3/10, 2/10, 1/10, 2/10, 6/10, 2/10.
+- **Class Diagram & Relationships** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11][S12]` — Every service
   class must have at least one relationship line to the entities it operates on, each label must match the
   field it's drawn from, every drawn edge must match what the code actually has, every drawn class must
-  actually exist in the code, and a diagram has to be drawn *at all* — now five sessions running with zero
-  diagram produced. Score history: 5/10, 6/10, 5/10, 1/10, 7/10, 5/10, 1/10, 1/10, 1/10, 1/10, 1/10.
-- **Pattern Choice** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Sessions 05 and 06 strung
+  actually exist in the code, and a diagram has to be drawn *at all* — now six sessions running with zero
+  diagram produced. Session 12 made it six. Score history: 5/10, 6/10, 5/10, 1/10, 7/10, 5/10, 1/10, 1/10, 1/10, 1/10, 1/10, 1/10.
+- **Pattern Choice** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11][S12]` — Sessions 05 and 06 strung
   together two correctly-wired Strategy patterns in a row; Session 07 broke that streak with a
   shaped-but-unwired interface; Session 08 had no pattern at all; Session 09 got furthest (shaped and wired,
   defeated by a `static` field); Session 10 was back to no pattern at all despite the problem's own source
@@ -68,8 +74,9 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   actually the correct call for eviction order (reached by never asking the question, not by deliberate
   justification), and its thread-safety escalation was a pure concurrency-control decision (coarse-grained
   `synchronized`, correctly chosen) with no written rationale either — the same undocumented-justification gap
-  twice over. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10.
-- **Requirements & Entities** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11]` — Write the
+  twice over. Session 12 had the right instinct (an `Appender` interface) and a sound trade-off argument
+  (one shared buffer), but named no pattern and justified none as a pattern. Score history: 2/10, 2/10, 1/10, 1/10, 6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10, 4/10.
+- **Requirements & Entities** `[S01][S02][S03][S04][S05][S06][S07][S08][S09][S10][S11][S12]` — Write the
   one-sentence responsibility per entity as you list it, keep an out-of-scope list every session, keep the
   written entity list in sync with the classes actually built, delete an entity the moment it's noticed to be
   unused, a domain concept that's genuinely load-bearing still needs its own entity even when a primitive can
@@ -78,9 +85,19 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   *documented* one (`Node`/`Lru` were the right entities, neither had a written responsibility sentence), and
   an escalation on an existing problem (new concurrency requirement, same entities) still needs its own written
   scope statement; nothing named *what* needed protecting or *why* the chosen lock granularity was enough.
-  Score history: 5/10, 5/10, 6/10, 5/10, 7/10, 5/10, 4/10, 3/10, 3/10, 4/10, 3/10.
+  Session 12 wrote requirements and the log-field list down but again no out-of-scope list.
+  Score history: 5/10, 5/10, 6/10, 5/10, 7/10, 5/10, 4/10, 3/10, 3/10, 4/10, 3/10, 5/10.
 
 ## Recurring Action Items
+
+- **The written design runs ahead of the code** `[S12]` — new in Session 12, and the reverse of most earlier
+  sessions: the README described a producer/consumer queue, a shared buffer and a flush policy, and the code was a
+  synchronous `System.out` filter. Build the thinnest vertical slice of the *designed* flow first, and run it
+  once before presenting.
+- **A value looked up on the wrong thread in an async design** `[S12]` — the README's consumer looked up the
+  trace id from the thread id; a worker thread is not the caller. Any design that hands work to another thread
+  must capture caller-dependent data (thread, request context, time) at the call site and carry it in the
+  message. Watch whether this repeats in the next concurrency problem.
 
 - **A named-but-unused entity slips into the entity list** `[S04][S06][S08]` — `Stock` in the stock-trading
   sessions, `Request` in the connection-pool session, and *both* `User` and `Bill` in Session 08 were listed,
@@ -103,7 +120,7 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   concurrency-control decision made correctly, with no written rationale for the choice at all. This axis's
   score history (6/10, 6/10, 3/10, 1/10, 4/10, 1/10, 1/10 across Sessions 05-11) shows no stable trend yet even
   after two genuinely strong sessions.
-- **Out-of-scope list regressed to zero** `[S06][S07][S08][S09][S10][S11]` — repeated a sixth time. Six
+- **Out-of-scope list regressed to zero** `[S06][S07][S08][S09][S10][S11][S12]` — repeated a seventh time. Seven
   sessions running now with no out-of-scope list — treat "name at least one out-of-scope item" as a hard
   checklist item for step ①, not just a habit expected to stick once learned.
 - **Unchecked setters and raw mutable getters** `[S01][S02][S03]` — four of six early sessions have exposed
@@ -114,7 +131,7 @@ Verdict thresholds (same as the sibling tracker): ✅ Pass ≥ 7 · ⚠️ Borde
   future problem with two symmetric-but-opposite sides.
 - **No runnable demo** `[S04]` — RESOLVED in Sessions 05, 06, and 07. Watch closely whether this repeats in a
   future session.
-- **No diagram produced at all** `[S07][S08][S09][S10][S11]` — now five sessions running. Treat "produce at
+- **No diagram produced at all** `[S07][S08][S09][S10][S11][S12]` — now six sessions running. Treat "produce at
   least a rough as-drawn diagram" as a hard checklist item before writing any code, not an expected habit that
   was ever actually confirmed.
 - **A `static` field assigned inside a non-static constructor** `[S09]` — new this session: per-instance

@@ -1,0 +1,73 @@
+classDiagram
+    class Appender {
+        <<interface>>
+        +append(LogEvent) void
+        +flush() void
+        +close() void
+    }
+    class Formatter {
+        <<interface>>
+        +format(LogEvent) String
+    }
+    class LogEvent {
+        <<record>>
+        Instant timestamp
+        LogLevel level
+        String loggerName
+        String threadName
+        String traceId
+        String message
+    }
+    class LogLevel {
+        <<enumeration>>
+        TRACE
+        DEBUG
+        INFO
+        WARN
+        ERROR
+    }
+    class Logger {
+        -String name
+        -LogLevel threshold
+        -List~Appender~ appenders
+        +info(String) void
+        +log(LogLevel, String) void
+    }
+    class LoggerFactory {
+        -Map~String,Logger~ loggers
+        +getLogger(Class) Logger
+        +shutdown() void
+    }
+    class TraceContext {
+        +set(String) void
+        +get() String
+    }
+    class PatternFormatter
+    class ConsoleAppender {
+        -Formatter formatter
+    }
+    class FileAppender {
+        -Formatter formatter
+        -BufferedWriter writer
+    }
+    class AsyncAppender {
+        -Appender delegate
+        -BlockingQueue~LogEvent~ queue
+        -int batchSize
+        -OverflowPolicy overflowPolicy
+        +getDroppedCount() long
+    }
+
+    PatternFormatter ..|> Formatter : implements the contract of
+    ConsoleAppender ..|> Appender : implements the contract of
+    FileAppender ..|> Appender : implements the contract of
+    AsyncAppender ..|> Appender : implements the contract of
+    AsyncAppender "1" --> "1" Appender : has-a delegate
+    ConsoleAppender "1" --> "1" Formatter : uses
+    FileAppender "1" --> "1" Formatter : uses
+    LoggerFactory "1" --> "*" Logger : has-a
+    Logger "1" --> "1..*" Appender : has-a
+    Logger "1" --> "1" LogLevel : has-a threshold
+    Logger --> LogEvent : uses to build
+    Logger --> TraceContext : uses to read trace id
+    LogEvent "1" --> "1" LogLevel : has-a
